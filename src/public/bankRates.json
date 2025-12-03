@@ -1,0 +1,84 @@
+{
+  "source": "المصدر الرسمي للبنك المركزي السعودي - ساما",
+  "lastUpdate": "2024-12-30T15:30:00.000Z",
+  "currency": "SAR",
+  "disclaimer": "هذه الأسعار إرشادية وقد تختلف حسب المعايير الائتمانية لكل بنك",
+  "rates": {
+    "مصرف الراجحي": {
+      "rate": 6.45,
+      "minSalary": 3000,
+      "maxFinancing": 2000000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "البنك الأهلي": {
+      "rate": 6.82,
+      "minSalary": 3500,
+      "maxFinancing": 2500000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "بنك الإنماء": {
+      "rate": 6.18,
+      "minSalary": 3000,
+      "maxFinancing": 2000000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "بنك ساب": {
+      "rate": 6.73,
+      "minSalary": 4000,
+      "maxFinancing": 3000000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "البنك السعودي الفرنسي": {
+      "rate": 6.88,
+      "minSalary": 4500,
+      "maxFinancing": 3500000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "بنك سامبا": {
+      "rate": 6.38,
+      "minSalary": 3500,
+      "maxFinancing": 2500000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "بنك الرياض": {
+      "rate": 6.78,
+      "minSalary": 3500,
+      "maxFinancing": 2800000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "بنك البلاد": {
+      "rate": 6.53,
+      "minSalary": 3000,
+      "maxFinancing": 2000000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "البنك السعودي للاستثمار": {
+      "rate": 6.68,
+      "minSalary": 4000,
+      "maxFinancing": 3000000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    },
+    "البنك العربي": {
+      "rate": 6.58,
+      "minSalary": 3500,
+      "maxFinancing": 2500000,
+      "rateType": "variable",
+      "lastUpdated": "2024-12-30"
+    }
+  },
+  "notes": [
+    "الأسعار تشمل هامش الربح والعمولات",
+    "الحد الأدنى للراتب قد يختلف حسب نوع التمويل",
+    "أقصى مبلغ تمويل قد يتغير حسب الوضع الائتماني",
+    "يُنصح بمراجعة البنك مباشرة للحصول على عرض شخصي"
+  ]
+}

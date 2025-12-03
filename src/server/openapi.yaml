@@ -1,0 +1,1163 @@
+openapi: 3.0.3
+info:
+  title: وسِيطي API
+  description: Real Estate CRM & Platform Integration API
+  version: 1.0.0
+  contact:
+    name: Waseety API Support
+    email: api@waseety.com
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.waseety.com/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [agent, manager, admin, owner]
+        email_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [villa, apartment, land, commercial]
+        category:
+          type: string
+          enum: [sale, rent]
+        city:
+          type: string
+        price:
+          type: number
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        area_m2:
+          type: number
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        type:
+          type: string
+          enum: [lead, client, owner, tenant]
+        status:
+          type: string
+          enum: [new, contacted, qualified, closed_won, closed_lost]
+        source:
+          type: string
+        lead_score:
+          type: integer
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+
+    Success:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+        meta:
+          type: object
+          properties:
+            timestamp:
+              type: string
+              format: date-time
+            request_id:
+              type: string
+
+security:
+  - bearerAuth: []
+
+paths:
+  # =======================================================
+  # Authentication
+  # =======================================================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: تسجيل مستخدم جديد
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - workspace_name
+              properties:
+                name:
+                  type: string
+                  example: "أحمد محمد"
+                email:
+                  type: string
+                  format: email
+                  example: "ahmed@example.com"
+                phone:
+                  type: string
+                  example: "0501234567"
+                password:
+                  type: string
+                  minLength: 8
+                  example: "SecurePass123!"
+                workspace_name:
+                  type: string
+                  example: "مكتب أحمد العقاري"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          workspace:
+                            $ref: '#/components/schemas/Workspace'
+                          tokens:
+                            type: object
+                            properties:
+                              access_token:
+                                type: string
+                              refresh_token:
+                                type: string
+                              expires_in:
+                                type: integer
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: تسجيل الدخول
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                workspace_id:
+                  type: string
+                  format: uuid
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          user:
+                            $ref: '#/components/schemas/User'
+                          tokens:
+                            type: object
+                            properties:
+                              access_token:
+                                type: string
+                              refresh_token:
+                                type: string
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current user
+      responses:
+        '200':
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+
+  # =======================================================
+  # Workspaces
+  # =======================================================
+  /workspaces:
+    post:
+      tags:
+        - Workspaces
+      summary: إنشاء مساحة عمل جديدة
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+              properties:
+                name:
+                  type: string
+                  example: "مكتب الرياض العقاري"
+      responses:
+        '201':
+          description: Workspace created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Workspace'
+
+    get:
+      tags:
+        - Workspaces
+      summary: Get user workspaces
+      responses:
+        '200':
+          description: List of workspaces
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Workspace'
+
+  # =======================================================
+  # Subscriptions
+  # =======================================================
+  /subscriptions/checkout:
+    post:
+      tags:
+        - Subscriptions
+      summary: بدء جلسة دفع الاشتراك
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plan_id
+                - workspace_id
+              properties:
+                plan_id:
+                  type: string
+                  enum: [individual, team, office, enterprise]
+                workspace_id:
+                  type: string
+                  format: uuid
+                payment_method:
+                  type: string
+                  enum: [card, bank_transfer]
+      responses:
+        '200':
+          description: Payment session created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          checkout_url:
+                            type: string
+                          session_id:
+                            type: string
+
+  /webhooks/payment:
+    post:
+      tags:
+        - Subscriptions
+      summary: Payment webhook
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                event_type:
+                  type: string
+                payment_id:
+                  type: string
+                status:
+                  type: string
+                  enum: [completed, failed, pending]
+      responses:
+        '200':
+          description: Webhook processed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+
+  # =======================================================
+  # Platforms
+  # =======================================================
+  /platforms:
+    get:
+      tags:
+        - Platforms
+      summary: قائمة المنصات المدعومة
+      responses:
+        '200':
+          description: List of platforms
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            key:
+                              type: string
+                            name:
+                              type: string
+                            supports_api_publish:
+                              type: boolean
+
+  /platform-accounts:
+    post:
+      tags:
+        - Platforms
+      summary: ربط حساب منصة
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - platform_id
+                - account_identifier
+                - api_key
+              properties:
+                platform_id:
+                  type: integer
+                account_identifier:
+                  type: string
+                  example: "user@example.com"
+                api_key:
+                  type: string
+      responses:
+        '201':
+          description: Platform account linked
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          connected:
+                            type: boolean
+
+  # =======================================================
+  # Properties
+  # =======================================================
+  /properties:
+    post:
+      tags:
+        - Properties
+      summary: إنشاء عقار جديد
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+                - type
+                - category
+                - city
+                - price
+              properties:
+                title:
+                  type: string
+                  example: "فيلا فاخرة في الياسمين"
+                description:
+                  type: string
+                type:
+                  type: string
+                  enum: [villa, apartment, land, commercial]
+                category:
+                  type: string
+                  enum: [sale, rent]
+                city:
+                  type: string
+                  example: "الرياض"
+                district:
+                  type: string
+                  example: "الياسمين"
+                price:
+                  type: number
+                  example: 2500000
+                bedrooms:
+                  type: integer
+                bathrooms:
+                  type: integer
+                area_m2:
+                  type: number
+                features:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '201':
+          description: Property created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Property'
+
+    get:
+      tags:
+        - Properties
+      summary: قائمة العقارات
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [draft, published, sold, archived]
+        - name: city
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of properties
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Property'
+
+  /properties/{id}/files:
+    post:
+      tags:
+        - Properties
+      summary: رفع ملفات العقار
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                file_type:
+                  type: string
+                  enum: [image, video, document]
+      responses:
+        '201':
+          description: Files uploaded
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          uploaded_files:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                url:
+                                  type: string
+
+  # =======================================================
+  # Listings
+  # =======================================================
+  /listings:
+    post:
+      tags:
+        - Listings
+      summary: إنشاء إعلان
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - property_id
+                - title
+                - price
+              properties:
+                property_id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                price:
+                  type: number
+      responses:
+        '201':
+          description: Listing created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+                          status:
+                            type: string
+
+  /listings/{id}/publish:
+    post:
+      tags:
+        - Listings
+      summary: نشر الإعلان على المنصات
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - platform_account_ids
+              properties:
+                platform_account_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                schedule_at:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Publish jobs queued
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          jobs:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: string
+                                  format: uuid
+                                status:
+                                  type: string
+
+  /publish-jobs/{id}:
+    get:
+      tags:
+        - Listings
+      summary: حالة مهمة النشر
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Publish job status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                          status:
+                            type: string
+                            enum: [pending, in_progress, success, failed]
+                          platform_url:
+                            type: string
+
+  # =======================================================
+  # CRM
+  # =======================================================
+  /crm/contacts:
+    post:
+      tags:
+        - CRM
+      summary: إنشاء عميل جديد
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - full_name
+              properties:
+                full_name:
+                  type: string
+                  example: "محمد العتيبي"
+                phone:
+                  type: string
+                  example: "0501234567"
+                email:
+                  type: string
+                  format: email
+                type:
+                  type: string
+                  enum: [lead, client, owner, tenant]
+                  default: lead
+                source:
+                  type: string
+                  example: "website"
+                source_meta:
+                  type: object
+                budget_max:
+                  type: number
+                requirements:
+                  type: string
+      responses:
+        '201':
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Contact'
+
+    get:
+      tags:
+        - CRM
+      summary: قائمة العملاء
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, contacted, qualified, closed_won, closed_lost]
+        - name: assigned_to
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of contacts
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Contact'
+
+  /crm/contacts/{id}:
+    get:
+      tags:
+        - CRM
+      summary: تفاصيل العميل
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contact details
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Contact'
+
+    put:
+      tags:
+        - CRM
+      summary: تحديث العميل
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name:
+                  type: string
+                phone:
+                  type: string
+                email:
+                  type: string
+                status:
+                  type: string
+                  enum: [new, contacted, qualified, closed_won, closed_lost]
+      responses:
+        '200':
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Contact'
+
+  /crm/contacts/{id}/activities:
+    post:
+      tags:
+        - CRM
+      summary: إضافة نشاط للعميل
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - type
+                - summary
+              properties:
+                type:
+                  type: string
+                  enum: [call, email, whatsapp, meeting, note]
+                summary:
+                  type: string
+                  example: "مكالمة متابعة"
+                details:
+                  type: string
+      responses:
+        '201':
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+
+  /crm/tasks:
+    post:
+      tags:
+        - CRM
+      summary: إنشاء مهمة جديدة
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - contact_id
+                - title
+              properties:
+                contact_id:
+                  type: string
+                  format: uuid
+                title:
+                  type: string
+                  example: "متابعة العميل"
+                description:
+                  type: string
+                assigned_to:
+                  type: string
+                  format: uuid
+                priority:
+                  type: string
+                  enum: [low, medium, high, urgent]
+                due_date:
+                  type: string
+                  format: date
+      responses:
+        '201':
+          description: Task created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            format: uuid
+
+  /crm/tags:
+    get:
+      tags:
+        - CRM
+      summary: قائمة التاقات
+      responses:
+        '200':
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: integer
+                            name:
+                              type: string
+                            color:
+                              type: string
+
+  /crm/pipeline:
+    get:
+      tags:
+        - CRM
+      summary: مراحل المبيعات
+      responses:
+        '200':
+          description: Pipeline stages
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          stages:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                id:
+                                  type: integer
+                                name:
+                                  type: string
+                                position:
+                                  type: integer
+                                contacts_count:
+                                  type: integer
+
+  # =======================================================
+  # Public APIs (منصتي)
+  # =======================================================
+  /public/listing-inquiries:
+    post:
+      tags:
+        - Public
+      summary: استفسار عن عقار (منصتي → CRM)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - listing_id
+                - full_name
+                - phone
+                - message
+              properties:
+                listing_id:
+                  type: string
+                  format: uuid
+                full_name:
+                  type: string
+                  example: "سارة أحمد"
+                phone:
+                  type: string
+                  example: "0501234567"
+                email:
+                  type: string
+                  format: email
+                message:
+                  type: string
+                  example: "مهتمة بالعقار، أريد معاينة"
+                preferred_contact:
+                  type: string
+                  enum: [phone, whatsapp, email]
+                  default: phone
+      responses:
+        '201':
+          description: Inquiry received and processed
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Success'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          contact_id:
+                            type: string
+                            format: uuid
+                          task_id:
+                            type: string
+                            format: uuid
+                          message:
+                            type: string
+                            example: "تم استلام استفسارك بنجاح"
+
+tags:
+  - name: Authentication
+    description: المصادقة وإدارة المستخدمين
+  - name: Workspaces
+    description: مساحات العمل والفرق
+  - name: Subscriptions
+    description: الاشتراكات والمدفوعات
+  - name: Platforms
+    description: المنصا�� والتكاملات
+  - name: Properties
+    description: إدارة العقارات
+  - name: Listings
+    description: الإعلانات والنشر
+  - name: CRM
+    description: إدارة العملاء
+  - name: Public
+    description: واجهات برمجية عامة

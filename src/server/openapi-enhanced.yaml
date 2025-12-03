@@ -1,0 +1,671 @@
+openapi: 3.0.3
+info:
+  title: وسِيطي API المحسن
+  description: |
+    Real Estate CRM & Platform Integration API
+    مع دعم Worker و Real-time Notifications
+    
+    ## الميزات الجديدة:
+    - Response formatting موحد
+    - Real-time notifications عبر WebSocket
+    - Background jobs للنشر على المنصات
+    - معالجة أخطاء محسنة
+    - Request tracking مع IDs
+  version: 1.0.0
+  contact:
+    name: Waseety API Support
+    email: api@waseety.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.waseety.com/v1
+    description: Production server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Enhanced Response Schemas
+    ResponseMeta:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: "وقت الاستجابة"
+        request_id:
+          type: string
+          description: "معرف الطلب للتتبع"
+        api_version:
+          type: string
+          example: "1.0.0"
+        response_time:
+          type: number
+          description: "وقت الاستجابة بالميللي ثانية"
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: object
+          description: "بيانات الاستجابة"
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    PaginatedResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            type: object
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            limit:
+              type: integer
+              example: 20
+            total:
+              type: integer
+              example: 150
+            pages:
+              type: integer
+              example: 8
+            has_next:
+              type: boolean
+            has_prev:
+              type: boolean
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "خطأ في التحقق من البيانات"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+        meta:
+          $ref: '#/components/schemas/ResponseMeta'
+
+    # Real-time Event Schemas
+    RealtimeEvent:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [notification, new_contact, task_assigned, property_viewed, publish_status]
+        data:
+          type: object
+        timestamp:
+          type: string
+          format: date-time
+
+    NotificationEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        data:
+          type: object
+        read:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    # Enhanced Data Schemas
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        phone:
+          type: string
+        role:
+          type: string
+          enum: [agent, manager, admin, owner]
+        email_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+
+    Property:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+          enum: [villa, apartment, land, commercial]
+        category:
+          type: string
+          enum: [sale, rent]
+        city:
+          type: string
+        price:
+          type: number
+        bedrooms:
+          type: integer
+        bathrooms:
+          type: integer
+        area_m2:
+          type: number
+        views_count:
+          type: integer
+        inquiries_count:
+          type: integer
+        status:
+          type: string
+          enum: [draft, published, sold, archived]
+        created_at:
+          type: string
+          format: date-time
+
+    Contact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        type:
+          type: string
+          enum: [lead, client, owner, tenant]
+        status:
+          type: string
+          enum: [new, contacted, qualified, closed_won, closed_lost]
+        source:
+          type: string
+        lead_score:
+          type: integer
+        last_contact_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    PublishJob:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        listing_id:
+          type: string
+          format: uuid
+        platform_account_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, in_progress, success, failed]
+        platform_url:
+          type: string
+        platform_response:
+          type: object
+        attempts:
+          type: integer
+        created_at:
+          type: string
+          format: date-time
+        finished_at:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
+
+paths:
+  # =======================================================
+  # System Health
+  # =======================================================
+  /health:
+    get:
+      tags:
+        - System
+      summary: فحص صحة النظام
+      security: []
+      responses:
+        '200':
+          description: System health status
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          status:
+                            type: string
+                            example: "healthy"
+                          uptime:
+                            type: number
+                          memory:
+                            type: object
+                            properties:
+                              used:
+                                type: number
+                              total:
+                                type: number
+                          version:
+                            type: string
+
+  # =======================================================
+  # Public APIs (منصتي)
+  # =======================================================
+  /public/listing-inquiries:
+    post:
+      tags:
+        - Public
+      summary: استفسار عن عقار (منصتي → CRM)
+      description: |
+        **الوظيفة الأساسية:**
+        يستقبل استفسارات العملاء من منصتي ويقوم بـ:
+        - التحقق من وجود العميل بالهاتف أو البريد
+        - إنشاء عميل جديد أو تحديث الموجود
+        - إضافة activity نوع inquiry مع تفاصيل كاملة
+        - إنشاء task متابعة للوسيط الافتراضي
+        - إرسال إشعارات فورية عبر Real-time
+        - تحديث عدادات العقار
+        
+        **Enhanced Response:**
+        يرجع الآن معرف العميل والمهمة مع response format موحد
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - listing_id
+                - full_name
+                - phone
+                - message
+              properties:
+                listing_id:
+                  type: string
+                  format: uuid
+                  description: "معرف الإعلان"
+                full_name:
+                  type: string
+                  example: "سارة أحمد"
+                  minLength: 2
+                  maxLength: 100
+                phone:
+                  type: string
+                  example: "0501234567"
+                  pattern: "^05\\d{8}$"
+                  description: "رقم الهاتف السعودي"
+                email:
+                  type: string
+                  format: email
+                  description: "البريد الإلكتروني (اختياري)"
+                message:
+                  type: string
+                  example: "مهتمة بالعقار، أريد معاينة"
+                  minLength: 10
+                  maxLength: 1000
+                preferred_contact:
+                  type: string
+                  enum: [phone, whatsapp, email]
+                  default: phone
+                  description: "طريقة التواصل المفضلة"
+                budget_range:
+                  type: string
+                  example: "2000000-3000000"
+                  description: "النطاق السعري المطلوب"
+      responses:
+        '201':
+          description: تم استلام الاستفسار ومعالجته بنجاح
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          contact_id:
+                            type: string
+                            format: uuid
+                            description: "معرف العميل"
+                          task_id:
+                            type: string
+                            format: uuid
+                            description: "معرف مهمة المتابعة"
+                          message:
+                            type: string
+                            example: "تم استلام استفسارك بنجاح"
+                          is_new_contact:
+                            type: boolean
+                            description: "هل العميل جديد"
+                          lead_score:
+                            type: integer
+                            description: "نقاط العميل المحتمل"
+        '400':
+          description: خطأ في التحقق من البيانات
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: الإعلان غير موجود
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # =======================================================
+  # Enhanced Listings with Background Jobs
+  # =======================================================
+  /listings/{id}/publish:
+    post:
+      tags:
+        - Listings
+      summary: نشر الإعلان على المنصات (محسن)
+      description: |
+        **الوظيفة المحسنة:**
+        - إنشاء background jobs للنشر على المنصات
+        - معالجة غير متزامنة مع Worker
+        - إشعارات مباشرة عند اكتمال النشر
+        - تتبع حالة النشر لكل منصة
+        - إعادة المحاولة التلقائية عند الفشل
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - platform_account_ids
+              properties:
+                platform_account_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+                  description: "معرفات حسابات المنصات"
+                schedule_at:
+                  type: string
+                  format: date-time
+                  description: "وقت النشر المجدول (اختياري)"
+                publish_settings:
+                  type: object
+                  description: "إعدادات خاصة لكل منصة"
+                  additionalProperties:
+                    type: object
+      responses:
+        '200':
+          description: تم إنشاء مهام النشر بنجاح
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          jobs:
+                            type: array
+                            items:
+                              $ref: '#/components/schemas/PublishJob'
+                          total_jobs:
+                            type: integer
+                          estimated_completion:
+                            type: string
+                            format: date-time
+
+  /publish-jobs/{id}:
+    get:
+      tags:
+        - Listings
+      summary: حالة مهمة النشر (محسن)
+      description: |
+        **معلومات محسنة:**
+        - حالة المهمة مع تفاصيل الأخطاء
+        - رابط الإعلان على المنصة
+        - إحصائيات الأداء
+        - سجل المحاولات
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: حالة مهمة النشر
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PublishJob'
+
+  # =======================================================
+  # Real-time WebSocket Documentation
+  # =======================================================
+  /realtime/connect:
+    get:
+      tags:
+        - Real-time
+      summary: الاتصال بخادم الإشعارات المباشرة
+      description: |
+        **WebSocket Connection:**
+        - URL: ws://localhost:4000/socket.io
+        - Authentication: JWT token في handshake
+        - Auto-reconnection مع exponential backoff
+        
+        **الأحداث المتاحة:**
+        - `notification` - إشعارات النظام
+        - `contact:new` - عميل جديد
+        - `task:assigned` - مهمة جديدة
+        - `property:viewed` - مشاهدة عقار
+        - `publish:status` - حالة النشر
+        
+        **Client Events:**
+        - `property:view` - تسجيل مشاهدة عقار
+        - `contact:update` - تحديث عميل
+        - `task:complete` - إكمال مهمة
+        - `dashboard:stats` - طلب إحصائيات
+      security: []
+      responses:
+        '200':
+          description: معلومات الاتصال المباشر
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        properties:
+                          websocket_url:
+                            type: string
+                            example: "ws://localhost:4000/socket.io"
+                          events:
+                            type: array
+                            items:
+                              type: object
+                              properties:
+                                name:
+                                  type: string
+                                description:
+                                  type: string
+                                direction:
+                                  type: string
+                                  enum: [incoming, outgoing, bidirectional]
+
+  # =======================================================
+  # Enhanced CRM with Real-time
+  # =======================================================
+  /crm/contacts:
+    post:
+      tags:
+        - CRM
+      summary: إنشاء عميل جديد (محسن)
+      description: |
+        **الميزات المحسنة:**
+        - حساب Lead Score تلقائي
+        - إشعارات مباشرة للفريق
+        - تعيين تلقائي للوسيط
+        - تتبع مصدر العميل
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - full_name
+              properties:
+                full_name:
+                  type: string
+                  example: "محمد العتيبي"
+                phone:
+                  type: string
+                  example: "0501234567"
+                email:
+                  type: string
+                  format: email
+                type:
+                  type: string
+                  enum: [lead, client, owner, tenant]
+                  default: lead
+                source:
+                  type: string
+                  example: "website"
+                source_meta:
+                  type: object
+                  description: "معلومات إضافية عن المصدر"
+                budget_max:
+                  type: number
+                requirements:
+                  type: string
+                assigned_to:
+                  type: string
+                  format: uuid
+                  description: "الوسيط المخصص (اختياري)"
+      responses:
+        '201':
+          description: تم إنشاء العميل بنجاح
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Contact'
+                          - type: object
+                            properties:
+                              realtime_notification_sent:
+                                type: boolean
+                              assigned_agent:
+                                type: object
+                                properties:
+                                  id:
+                                    type: string
+                                  name:
+                                    type: string
+
+tags:
+  - name: System
+    description: فحص صحة النظام والمعلومات العامة
+  - name: Authentication
+    description: المصادقة وإدارة المستخدمين
+  - name: Public
+    description: واجهات برمجية عامة (منصتي)
+  - name: Listings
+    description: الإعلانات والنشر مع Background Jobs
+  - name: CRM
+    description: إدارة العملاء مع Real-time
+  - name: Real-time
+    description: الإشعارات المباشرة والـ WebSocket
+
+externalDocs:
+  description: وثائق GitHub
+  url: https://github.com/waseety/api-docs

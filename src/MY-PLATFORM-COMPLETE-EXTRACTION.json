@@ -1,0 +1,2060 @@
+{
+  "platform": {
+    "name": "منصتي (My Platform)",
+    "route": "/my-platform",
+    "description": "مركز التحكم الشخصي للوسيط العقاري",
+    "authentication": "required",
+    "roles": ["broker", "admin", "super_admin"]
+  },
+  
+  "layout": {
+    "header": {
+      "component": "SharedHeader.tsx",
+      "position": "top-fixed",
+      "height": "80px",
+      "rtl": true,
+      "elements": [
+        {
+          "type": "logo",
+          "position": "right",
+          "image": "/logo.png",
+          "link": "/dashboard",
+          "alt": "Nova CRM"
+        },
+        {
+          "type": "workspace_switcher",
+          "position": "right-after-logo",
+          "component": "WorkspaceSwitcher",
+          "description": "زر تبديل مساحة العمل",
+          "dropdown": true,
+          "items": "dynamic"
+        },
+        {
+          "type": "navigation_menu",
+          "position": "center",
+          "items": [
+            {
+              "label": "الرئيسية",
+              "link": "/dashboard",
+              "icon": "Home"
+            },
+            {
+              "label": "منصتي",
+              "link": "/my-platform",
+              "icon": "BarChart3",
+              "active": true
+            },
+            {
+              "label": "العروض",
+              "link": "/offers",
+              "icon": "Home"
+            },
+            {
+              "label": "الطلبات",
+              "link": "/requests",
+              "icon": "FileText"
+            },
+            {
+              "label": "العملاء",
+              "link": "/customers",
+              "icon": "Users"
+            }
+          ]
+        },
+        {
+          "type": "notifications",
+          "position": "left",
+          "component": "NotificationSystem",
+          "badge": "unread_count",
+          "realtime": true
+        },
+        {
+          "type": "ai_assistant",
+          "position": "left",
+          "component": "AI_BubbleAssistant",
+          "icon": "MessageCircle",
+          "color": "#01411C"
+        },
+        {
+          "type": "user_menu",
+          "position": "left",
+          "component": "UserDropdown",
+          "dropdown": true,
+          "items": [
+            {
+              "label": "الملف الشخصي",
+              "link": "/profile",
+              "icon": "User"
+            },
+            {
+              "label": "الإعدادات",
+              "link": "/settings",
+              "icon": "Settings"
+            },
+            {
+              "label": "تسجيل الخروج",
+              "action": "logout",
+              "icon": "LogOut"
+            }
+          ]
+        }
+      ],
+      "collapsible": false,
+      "shadow": true,
+      "background": "#FFFFFF"
+    },
+    
+    "left_sidebar": {
+      "component": "LeftSliderComplete.tsx",
+      "position": "left-fixed",
+      "width": {
+        "expanded": "280px",
+        "collapsed": "80px"
+      },
+      "collapsible": true,
+      "default_state": "expanded",
+      "background": "#01411C",
+      "color": "#FFFFFF",
+      "items": [
+        {
+          "type": "section",
+          "label": "القائمة الرئيسية",
+          "items": [
+            {
+              "label": "لوحة التحكم",
+              "link": "/dashboard",
+              "icon": "LayoutDashboard"
+            },
+            {
+              "label": "منصتي",
+              "link": "/my-platform",
+              "icon": "BarChart3",
+              "active": true
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "label": "الإدارة",
+          "items": [
+            {
+              "label": "العروض",
+              "link": "/offers",
+              "icon": "Home",
+              "badge": "pending_count"
+            },
+            {
+              "label": "الطلبات",
+              "link": "/requests",
+              "icon": "FileText",
+              "badge": "active_count"
+            },
+            {
+              "label": "العملاء",
+              "link": "/customers",
+              "icon": "Users",
+              "badge": "new_count"
+            },
+            {
+              "label": "المواعيد",
+              "link": "/calendar",
+              "icon": "Calendar"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "label": "النشر والمنصات",
+          "items": [
+            {
+              "label": "السوق",
+              "link": "/marketplace",
+              "icon": "Store"
+            },
+            {
+              "label": "المنصات المتصلة",
+              "link": "/platforms",
+              "icon": "Share2"
+            }
+          ]
+        }
+      ]
+    },
+    
+    "right_sidebar": {
+      "component": "PersistentRightSidebar.tsx",
+      "position": "right-fixed",
+      "width": {
+        "expanded": "320px",
+        "collapsed": "60px"
+      },
+      "collapsible": true,
+      "default_state": "expanded",
+      "background": "#F8F9FA",
+      "sections": [
+        {
+          "type": "workspace_switcher",
+          "order": 1,
+          "title": "مساحة العمل",
+          "component": "WorkspaceSwitcher",
+          "description": "التبديل بين الحسابات والشركات",
+          "details": {
+            "current_workspace_display": true,
+            "workspace_list": true,
+            "add_workspace_button": true,
+            "workspace_settings_button": true
+          }
+        },
+        {
+          "type": "digital_business_card",
+          "order": 2,
+          "title": "بطاقة أعمالي الرقمية",
+          "component": "DigitalBusinessCard",
+          "link": "/digital-card",
+          "preview": true,
+          "editable": true,
+          "shareable": true,
+          "analytics": true
+        },
+        {
+          "type": "quick_actions",
+          "order": 3,
+          "title": "إجراءات سريعة",
+          "items": [
+            {
+              "label": "إضافة عرض",
+              "icon": "Plus",
+              "action": "open_create_offer_modal"
+            },
+            {
+              "label": "إضافة طلب",
+              "icon": "Plus",
+              "action": "open_create_request_modal"
+            },
+            {
+              "label": "إضافة عميل",
+              "icon": "UserPlus",
+              "action": "open_create_customer_modal"
+            }
+          ]
+        },
+        {
+          "type": "recent_activity",
+          "order": 4,
+          "title": "النشاط الأخير",
+          "limit": 5,
+          "realtime": true,
+          "link_to_all": "/activity"
+        }
+      ]
+    },
+    
+    "main_content": {
+      "component": "MyPlatform.tsx",
+      "padding": "24px",
+      "max_width": "1400px",
+      "centered": true
+    }
+  },
+  
+  "tabs": [
+    {
+      "id": "overview",
+      "label": "نظرة عامة",
+      "icon": "LayoutDashboard",
+      "order": 1,
+      "default": true,
+      "route": "/my-platform?tab=overview"
+    },
+    {
+      "id": "offers",
+      "label": "عروضي",
+      "icon": "Home",
+      "order": 2,
+      "route": "/my-platform?tab=offers",
+      "badge": "total_offers"
+    },
+    {
+      "id": "requests",
+      "label": "طلباتي",
+      "icon": "FileText",
+      "order": 3,
+      "route": "/my-platform?tab=requests",
+      "badge": "total_requests"
+    },
+    {
+      "id": "platforms",
+      "label": "المنصات",
+      "icon": "Share2",
+      "order": 4,
+      "route": "/my-platform?tab=platforms",
+      "badge": "connected_platforms"
+    },
+    {
+      "id": "analytics",
+      "label": "التحليلات",
+      "icon": "TrendingUp",
+      "order": 5,
+      "route": "/my-platform?tab=analytics"
+    },
+    {
+      "id": "team",
+      "label": "الفريق",
+      "icon": "Users",
+      "order": 6,
+      "route": "/my-platform?tab=team",
+      "visible_for": ["admin", "super_admin", "owner"]
+    }
+  ],
+  
+  "overview_section": {
+    "tab_id": "overview",
+    "layout": "grid",
+    "components": [
+      {
+        "type": "stats_cards",
+        "order": 1,
+        "layout": "grid-4-columns",
+        "cards": [
+          {
+            "id": "total_offers",
+            "title": "إجمالي العروض",
+            "icon": "Home",
+            "color": "#01411C",
+            "value_source": "stats.offers.total",
+            "sub_value": {
+              "label": "نشط",
+              "source": "stats.offers.active",
+              "color": "#22c55e"
+            },
+            "trend": {
+              "enabled": true,
+              "period": "last_30_days",
+              "comparison": "previous_period"
+            },
+            "click_action": "navigate_to_offers_tab"
+          },
+          {
+            "id": "total_requests",
+            "title": "إجمالي الطلبات",
+            "icon": "FileText",
+            "color": "#D4AF37",
+            "value_source": "stats.requests.total",
+            "sub_value": {
+              "label": "نشط",
+              "source": "stats.requests.active",
+              "color": "#22c55e"
+            },
+            "click_action": "navigate_to_requests_tab"
+          },
+          {
+            "id": "total_platforms",
+            "title": "المنصات المتصلة",
+            "icon": "Share2",
+            "color": "#3b82f6",
+            "value_source": "stats.platforms.connected",
+            "sub_value": {
+              "label": "إجمالي الإعلانات",
+              "source": "stats.platforms.totalAds"
+            },
+            "click_action": "navigate_to_platforms_tab"
+          },
+          {
+            "id": "total_views",
+            "title": "إجمالي المشاهدات",
+            "icon": "Eye",
+            "color": "#8b5cf6",
+            "value_source": "stats.platforms.totalViews",
+            "sub_value": {
+              "label": "استفسارات",
+              "source": "stats.platforms.totalInquiries"
+            }
+          }
+        ]
+      },
+      {
+        "type": "performance_metrics",
+        "order": 2,
+        "layout": "grid-3-columns",
+        "cards": [
+          {
+            "id": "response_rate",
+            "title": "معدل الاستجابة",
+            "icon": "Activity",
+            "value_source": "stats.performance.responseRate",
+            "format": "percentage",
+            "goal": 90,
+            "progress_bar": true
+          },
+          {
+            "id": "conversion_rate",
+            "title": "معدل التحويل",
+            "icon": "TrendingUp",
+            "value_source": "stats.performance.conversionRate",
+            "format": "percentage",
+            "goal": 15,
+            "progress_bar": true
+          },
+          {
+            "id": "avg_response_time",
+            "title": "متوسط وقت الاستجابة",
+            "icon": "Clock",
+            "value_source": "stats.performance.averageResponseTime",
+            "format": "duration_minutes"
+          }
+        ]
+      },
+      {
+        "type": "recent_offers",
+        "order": 3,
+        "title": "أحدث العروض",
+        "limit": 5,
+        "show_status": true,
+        "show_views": true,
+        "click_action": "open_offer_details",
+        "link_to_all": "navigate_to_offers_tab"
+      },
+      {
+        "type": "activity_timeline",
+        "order": 4,
+        "title": "آخر النشاطات",
+        "limit": 10,
+        "realtime": true,
+        "filters": ["all", "offers", "requests", "customers", "platforms"],
+        "link_to_all": "/activity"
+      }
+    ]
+  },
+  
+  "offers_section": {
+    "tab_id": "offers",
+    "layout": "list-with-filters",
+    "components": [
+      {
+        "type": "filters_bar",
+        "order": 1,
+        "position": "top",
+        "filters": [
+          {
+            "id": "type",
+            "label": "النوع",
+            "type": "dropdown",
+            "options": [
+              { "value": "all", "label": "الكل" },
+              { "value": "sale", "label": "بيع" },
+              { "value": "rent", "label": "إيجار" }
+            ],
+            "default": "all"
+          },
+          {
+            "id": "status",
+            "label": "الحالة",
+            "type": "dropdown",
+            "options": [
+              { "value": "all", "label": "الكل" },
+              { "value": "active", "label": "نشط" },
+              { "value": "pending", "label": "قيد الانتظار" },
+              { "value": "accepted", "label": "مقبول" },
+              { "value": "expired", "label": "منتهي" }
+            ],
+            "default": "all"
+          },
+          {
+            "id": "platform",
+            "label": "المنصة",
+            "type": "dropdown",
+            "options": "dynamic_from_connected_platforms",
+            "default": "all"
+          },
+          {
+            "id": "search",
+            "label": "بحث",
+            "type": "text",
+            "placeholder": "ابحث في العروض..."
+          }
+        ],
+        "actions": [
+          {
+            "id": "add_offer",
+            "label": "إضافة عرض",
+            "icon": "Plus",
+            "action": "open_create_offer_modal",
+            "variant": "primary"
+          },
+          {
+            "id": "refresh",
+            "label": "تحديث",
+            "icon": "RefreshCw",
+            "action": "refresh_offers",
+            "variant": "outline"
+          }
+        ]
+      },
+      {
+        "type": "sort_bar",
+        "order": 2,
+        "options": [
+          { "value": "date-desc", "label": "الأحدث أولاً" },
+          { "value": "date-asc", "label": "الأقدم أولاً" },
+          { "value": "price-desc", "label": "الأعلى سعراً" },
+          { "value": "price-asc", "label": "الأقل سعراً" },
+          { "value": "views-desc", "label": "الأكثر مشاهدة" }
+        ],
+        "default": "date-desc"
+      },
+      {
+        "type": "offers_grid",
+        "order": 3,
+        "layout": "grid-3-columns",
+        "responsive": true,
+        "item_component": "OfferCard",
+        "pagination": {
+          "enabled": true,
+          "items_per_page": 12,
+          "type": "numbered"
+        }
+      }
+    ],
+    
+    "offer_card": {
+      "component": "OfferCard.tsx",
+      "layout": "vertical",
+      "elements": [
+        {
+          "type": "image",
+          "position": "top",
+          "source": "offer.images[0]",
+          "fallback": "/placeholder-property.jpg",
+          "aspect_ratio": "16:9",
+          "hover_effect": "zoom"
+        },
+        {
+          "type": "badge",
+          "position": "top-right-overlay",
+          "source": "offer.type",
+          "variants": {
+            "sale": { "label": "للبيع", "color": "#01411C" },
+            "rent": { "label": "للإيجار", "color": "#D4AF37" }
+          }
+        },
+        {
+          "type": "status_badge",
+          "position": "top-left-overlay",
+          "source": "offer.status",
+          "variants": {
+            "active": { "label": "نشط", "color": "#22c55e" },
+            "pending": { "label": "قيد الانتظار", "color": "#f59e0b" },
+            "accepted": { "label": "مقبول", "color": "#3b82f6" },
+            "expired": { "label": "منتهي", "color": "#ef4444" }
+          }
+        },
+        {
+          "type": "title",
+          "position": "content",
+          "source": "offer.title",
+          "max_lines": 2,
+          "font_size": "18px",
+          "font_weight": "600"
+        },
+        {
+          "type": "location",
+          "position": "content",
+          "icon": "MapPin",
+          "source": "offer.location.city + ', ' + offer.location.district"
+        },
+        {
+          "type": "price",
+          "position": "content",
+          "source": "offer.price",
+          "format": "currency_sar",
+          "font_size": "24px",
+          "font_weight": "700",
+          "color": "#01411C"
+        },
+        {
+          "type": "specs",
+          "position": "content",
+          "layout": "horizontal",
+          "items": [
+            {
+              "icon": "Home",
+              "source": "offer.propertyType",
+              "format": "property_type_arabic"
+            },
+            {
+              "icon": "Maximize",
+              "source": "offer.area",
+              "format": "area_sqm"
+            },
+            {
+              "icon": "Bed",
+              "source": "offer.bedrooms",
+              "condition": "offer.bedrooms > 0"
+            },
+            {
+              "icon": "Bath",
+              "source": "offer.bathrooms",
+              "condition": "offer.bathrooms > 0"
+            }
+          ]
+        },
+        {
+          "type": "stats",
+          "position": "footer",
+          "layout": "horizontal",
+          "items": [
+            {
+              "icon": "Eye",
+              "source": "offer.views",
+              "label": "مشاهدة"
+            },
+            {
+              "icon": "MessageSquare",
+              "source": "offer.inquiries",
+              "label": "استفسار"
+            },
+            {
+              "icon": "Share2",
+              "source": "offer.shares",
+              "label": "مشاركة"
+            }
+          ]
+        },
+        {
+          "type": "published_platforms",
+          "position": "footer",
+          "source": "offer.publishedPlatforms",
+          "display": "icons",
+          "max_visible": 3,
+          "tooltip": true
+        },
+        {
+          "type": "actions",
+          "position": "footer",
+          "layout": "horizontal",
+          "buttons": [
+            {
+              "id": "view",
+              "label": "عرض",
+              "icon": "Eye",
+              "action": "open_offer_details",
+              "variant": "outline"
+            },
+            {
+              "id": "edit",
+              "label": "تعديل",
+              "icon": "Edit",
+              "action": "open_edit_offer_modal",
+              "variant": "outline"
+            },
+            {
+              "id": "share",
+              "label": "مشاركة",
+              "icon": "Share2",
+              "action": "open_share_menu",
+              "variant": "outline"
+            },
+            {
+              "id": "more",
+              "icon": "MoreVertical",
+              "action": "open_actions_menu",
+              "variant": "ghost",
+              "menu_items": [
+                {
+                  "label": "نسخ الرابط",
+                  "icon": "Link",
+                  "action": "copy_offer_link"
+                },
+                {
+                  "label": "تحديث الحالة",
+                  "icon": "RefreshCw",
+                  "action": "open_status_update_modal"
+                },
+                {
+                  "label": "تجديد النشر",
+                  "icon": "Upload",
+                  "action": "republish_offer"
+                },
+                {
+                  "separator": true
+                },
+                {
+                  "label": "إيقاف النشر",
+                  "icon": "PauseCircle",
+                  "action": "unpublish_offer",
+                  "condition": "offer.status === 'active'"
+                },
+                {
+                  "label": "حذف",
+                  "icon": "Trash2",
+                  "action": "delete_offer",
+                  "confirm": true,
+                  "variant": "destructive"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    
+    "offer_details_modal": {
+      "component": "OfferDetailsModal.tsx",
+      "size": "large",
+      "sections": [
+        {
+          "type": "image_gallery",
+          "order": 1,
+          "images_source": "offer.images",
+          "videos_source": "offer.videos",
+          "navigation": true,
+          "thumbnails": true,
+          "fullscreen": true
+        },
+        {
+          "type": "basic_info",
+          "order": 2,
+          "fields": [
+            { "label": "العنوان", "source": "offer.title" },
+            { "label": "النوع", "source": "offer.type", "format": "offer_type_arabic" },
+            { "label": "نوع العقار", "source": "offer.propertyType", "format": "property_type_arabic" },
+            { "label": "السعر", "source": "offer.price", "format": "currency_sar", "highlight": true },
+            { "label": "المساحة", "source": "offer.area", "format": "area_sqm" },
+            { "label": "الغرف", "source": "offer.bedrooms", "condition": "offer.bedrooms > 0" },
+            { "label": "الحمامات", "source": "offer.bathrooms", "condition": "offer.bathrooms > 0" }
+          ]
+        },
+        {
+          "type": "location",
+          "order": 3,
+          "fields": [
+            { "label": "المدينة", "source": "offer.location.city" },
+            { "label": "الحي", "source": "offer.location.district" },
+            { "label": "الشارع", "source": "offer.location.street", "condition": "offer.location.street" }
+          ],
+          "map": {
+            "enabled": true,
+            "source": "offer.location.coordinates",
+            "zoom": 15,
+            "marker": true
+          }
+        },
+        {
+          "type": "description",
+          "order": 4,
+          "label": "الوصف",
+          "source": "offer.description",
+          "expandable": true
+        },
+        {
+          "type": "features",
+          "order": 5,
+          "label": "المميزات",
+          "source": "offer.features",
+          "display": "chips"
+        },
+        {
+          "type": "owner_info",
+          "order": 6,
+          "label": "معلومات المالك",
+          "visible_for": ["owner", "admin"],
+          "visibility": "private_only",
+          "note": "هذه المعلومات غير ظاهرة للعامة",
+          "fields": [
+            { "label": "الاسم", "source": "offer.ownerName" },
+            { "label": "الهاتف", "source": "offer.ownerPhone", "format": "phone", "copyable": true }
+          ],
+          "actions": [
+            {
+              "label": "اتصال",
+              "icon": "Phone",
+              "action": "call_owner"
+            },
+            {
+              "label": "واتساب",
+              "icon": "MessageCircle",
+              "action": "whatsapp_owner"
+            }
+          ]
+        },
+        {
+          "type": "publishing_info",
+          "order": 7,
+          "label": "معلومات النشر",
+          "fields": [
+            { "label": "تاريخ النشر", "source": "offer.publishedAt", "format": "date_time" },
+            { "label": "المنصات المنشور عليها", "source": "offer.publishedPlatforms", "display": "badges" },
+            { "label": "الحالة", "source": "offer.status", "format": "status_badge" }
+          ]
+        },
+        {
+          "type": "statistics",
+          "order": 8,
+          "label": "الإحصائيات",
+          "layout": "grid-3",
+          "items": [
+            { "label": "المشاهدات", "source": "offer.views", "icon": "Eye" },
+            { "label": "الاستفسارات", "source": "offer.inquiries", "icon": "MessageSquare" },
+            { "label": "المشاركات", "source": "offer.shares", "icon": "Share2" }
+          ],
+          "view_analytics_button": {
+            "label": "عرض التحليلات التفصيلية",
+            "action": "open_offer_analytics"
+          }
+        },
+        {
+          "type": "documents",
+          "order": 9,
+          "label": "المستندات",
+          "source": "offer.documents",
+          "display": "list",
+          "downloadable": true,
+          "condition": "offer.documents.length > 0"
+        }
+      ],
+      "actions": [
+        {
+          "label": "تعديل",
+          "icon": "Edit",
+          "action": "open_edit_offer_modal",
+          "variant": "outline"
+        },
+        {
+          "label": "مشاركة",
+          "icon": "Share2",
+          "action": "open_share_menu",
+          "variant": "outline"
+        },
+        {
+          "label": "نسخ الرابط",
+          "icon": "Link",
+          "action": "copy_offer_link",
+          "variant": "outline"
+        },
+        {
+          "label": "حذف",
+          "icon": "Trash2",
+          "action": "delete_offer",
+          "variant": "destructive",
+          "confirm": true
+        }
+      ]
+    }
+  },
+  
+  "requests_section": {
+    "tab_id": "requests",
+    "layout": "list-with-filters",
+    "similar_to": "offers_section",
+    "components": [
+      {
+        "type": "filters_bar",
+        "filters": [
+          {
+            "id": "type",
+            "label": "النوع",
+            "options": [
+              { "value": "all", "label": "الكل" },
+              { "value": "sale", "label": "شراء" },
+              { "value": "rent", "label": "إيجار" }
+            ]
+          },
+          {
+            "id": "status",
+            "label": "الحالة",
+            "options": [
+              { "value": "all", "label": "الكل" },
+              { "value": "active", "label": "نشط" },
+              { "value": "fulfilled", "label": "مكتمل" },
+              { "value": "cancelled", "label": "ملغي" }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "requests_grid",
+        "layout": "grid-3-columns",
+        "item_component": "RequestCard"
+      }
+    ]
+  },
+  
+  "platforms_section": {
+    "tab_id": "platforms",
+    "layout": "grid",
+    "components": [
+      {
+        "type": "platforms_grid",
+        "order": 1,
+        "layout": "grid-3-columns",
+        "item_component": "PlatformCard",
+        "platforms": [
+          {
+            "id": "nova_marketplace",
+            "name": "سوق نوفا",
+            "nameAr": "سوق نوفا",
+            "type": "marketplace",
+            "icon": "/platforms/nova.png",
+            "description": "السوق الداخلي للنظام",
+            "isDefault": true,
+            "isConnected": true,
+            "canDisconnect": false,
+            "statistics": {
+              "totalAds": "dynamic",
+              "activeAds": "dynamic",
+              "views": "dynamic",
+              "inquiries": "dynamic"
+            }
+          },
+          {
+            "id": "aqar",
+            "name": "عقار",
+            "nameAr": "عقار",
+            "type": "real-estate",
+            "icon": "/platforms/aqar.png",
+            "website": "https://aqar.fm",
+            "isConnected": "dynamic",
+            "connectionRequired": ["api_key", "username"],
+            "features": ["auto_publish", "analytics", "lead_integration"]
+          },
+          {
+            "id": "haraj",
+            "name": "حراج",
+            "nameAr": "حراج",
+            "type": "marketplace",
+            "icon": "/platforms/haraj.png",
+            "website": "https://haraj.com.sa",
+            "isConnected": "dynamic",
+            "connectionRequired": ["username", "password"],
+            "features": ["auto_publish", "image_upload"]
+          },
+          {
+            "id": "twitter",
+            "name": "تويتر (X)",
+            "nameAr": "تويتر",
+            "type": "social",
+            "icon": "/platforms/twitter.png",
+            "website": "https://twitter.com",
+            "isConnected": "dynamic",
+            "connectionRequired": ["oauth_token"],
+            "features": ["auto_post", "hashtags", "scheduling"]
+          },
+          {
+            "id": "instagram",
+            "name": "انستقرام",
+            "nameAr": "انستقرام",
+            "type": "social",
+            "icon": "/platforms/instagram.png",
+            "website": "https://instagram.com",
+            "isConnected": "dynamic",
+            "connectionRequired": ["oauth_token"],
+            "features": ["auto_post", "stories", "reels"]
+          },
+          {
+            "id": "whatsapp",
+            "name": "واتساب بزنس",
+            "nameAr": "واتساب",
+            "type": "messaging",
+            "icon": "/platforms/whatsapp.png",
+            "isConnected": "dynamic",
+            "connectionRequired": ["phone", "api_token"],
+            "features": ["broadcast", "auto_reply", "groups"]
+          }
+        ]
+      }
+    ],
+    
+    "platform_card": {
+      "component": "PlatformCard.tsx",
+      "elements": [
+        {
+          "type": "icon",
+          "position": "top-center",
+          "source": "platform.icon",
+          "size": "64px"
+        },
+        {
+          "type": "name",
+          "position": "content",
+          "source": "platform.nameAr",
+          "align": "center",
+          "font_size": "20px",
+          "font_weight": "600"
+        },
+        {
+          "type": "connection_badge",
+          "position": "top-right",
+          "source": "platform.isConnected",
+          "variants": {
+            "true": { "label": "متصل", "color": "#22c55e" },
+            "false": { "label": "غير متصل", "color": "#ef4444" }
+          }
+        },
+        {
+          "type": "statistics",
+          "position": "content",
+          "layout": "grid-2",
+          "condition": "platform.isConnected",
+          "items": [
+            { "label": "الإعلانات", "source": "platform.statistics.totalAds" },
+            { "label": "النشطة", "source": "platform.statistics.activeAds" },
+            { "label": "المشاهدات", "source": "platform.statistics.views" },
+            { "label": "الاستفسارات", "source": "platform.statistics.inquiries" }
+          ]
+        },
+        {
+          "type": "actions",
+          "position": "footer",
+          "buttons": [
+            {
+              "id": "connect",
+              "label": "ربط",
+              "icon": "Link",
+              "action": "open_connect_platform_modal",
+              "condition": "!platform.isConnected",
+              "variant": "primary"
+            },
+            {
+              "id": "settings",
+              "label": "إعدادات",
+              "icon": "Settings",
+              "action": "open_platform_settings",
+              "condition": "platform.isConnected",
+              "variant": "outline"
+            },
+            {
+              "id": "disconnect",
+              "label": "فصل",
+              "icon": "Unlink",
+              "action": "disconnect_platform",
+              "condition": "platform.isConnected && platform.canDisconnect !== false",
+              "variant": "destructive",
+              "confirm": true
+            },
+            {
+              "id": "sync",
+              "label": "مزامنة",
+              "icon": "RefreshCw",
+              "action": "sync_platform_data",
+              "condition": "platform.isConnected",
+              "variant": "outline"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  
+  "analytics_section": {
+    "tab_id": "analytics",
+    "layout": "dashboard",
+    "components": [
+      {
+        "type": "date_range_selector",
+        "order": 1,
+        "position": "top",
+        "options": [
+          { "value": "today", "label": "اليوم" },
+          { "value": "yesterday", "label": "أمس" },
+          { "value": "7days", "label": "آخر 7 أيام" },
+          { "value": "30days", "label": "آخر 30 يوماً" },
+          { "value": "90days", "label": "آخر 90 يوماً" },
+          { "value": "custom", "label": "نطاق مخصص" }
+        ],
+        "default": "30days"
+      },
+      {
+        "type": "overview_stats",
+        "order": 2,
+        "layout": "grid-4",
+        "cards": [
+          {
+            "title": "إجمالي المشاهدات",
+            "icon": "Eye",
+            "value_source": "analytics.totalViews",
+            "trend": true
+          },
+          {
+            "title": "إجمالي الاستفسارات",
+            "icon": "MessageSquare",
+            "value_source": "analytics.totalInquiries",
+            "trend": true
+          },
+          {
+            "title": "معدل التحويل",
+            "icon": "TrendingUp",
+            "value_source": "analytics.conversionRate",
+            "format": "percentage",
+            "trend": true
+          },
+          {
+            "title": "الإيرادات المحتملة",
+            "icon": "DollarSign",
+            "value_source": "analytics.potentialRevenue",
+            "format": "currency_sar",
+            "trend": true
+          }
+        ]
+      },
+      {
+        "type": "views_chart",
+        "order": 3,
+        "title": "المشاهدات عبر الوقت",
+        "chart_type": "line",
+        "data_source": "analytics.viewsOverTime",
+        "x_axis": "date",
+        "y_axis": "views",
+        "color": "#01411C",
+        "height": "300px"
+      },
+      {
+        "type": "offers_by_platform",
+        "order": 4,
+        "title": "العروض حسب المنصة",
+        "chart_type": "bar",
+        "data_source": "analytics.offersByPlatform",
+        "x_axis": "platform",
+        "y_axis": "count",
+        "horizontal": true,
+        "height": "250px"
+      },
+      {
+        "type": "top_performing_offers",
+        "order": 5,
+        "title": "أفضل العروض أداءً",
+        "limit": 10,
+        "sort_by": "views",
+        "display": "table",
+        "columns": [
+          { "header": "العنوان", "source": "offer.title", "width": "40%" },
+          { "header": "المشاهدات", "source": "offer.views", "align": "center" },
+          { "header": "الاستفسارات", "source": "offer.inquiries", "align": "center" },
+          { "header": "معدل التحويل", "source": "offer.conversionRate", "format": "percentage", "align": "center" },
+          { "header": "الإجراءات", "type": "actions" }
+        ]
+      },
+      {
+        "type": "geographic_distribution",
+        "order": 6,
+        "title": "التوزيع الجغرافي",
+        "chart_type": "pie",
+        "data_source": "analytics.offersByCity",
+        "label_field": "city",
+        "value_field": "count",
+        "height": "300px"
+      },
+      {
+        "type": "engagement_funnel",
+        "order": 7,
+        "title": "مسار التفاعل",
+        "chart_type": "funnel",
+        "stages": [
+          { "label": "مشاهدات", "source": "analytics.totalViews" },
+          { "label": "نقرات", "source": "analytics.totalClicks" },
+          { "label": "استفسارات", "source": "analytics.totalInquiries" },
+          { "label": "معاينات", "source": "analytics.totalViewings" },
+          { "label": "صفقات", "source": "analytics.totalDeals" }
+        ],
+        "height": "300px"
+      }
+    ]
+  },
+  
+  "team_section": {
+    "tab_id": "team",
+    "visible_for": ["admin", "super_admin", "owner"],
+    "layout": "list-with-header",
+    "components": [
+      {
+        "type": "team_header",
+        "order": 1,
+        "title": "إدارة الفريق",
+        "actions": [
+          {
+            "label": "إضافة عضو",
+            "icon": "UserPlus",
+            "action": "open_invite_member_modal",
+            "variant": "primary"
+          },
+          {
+            "label": "الإعدادات",
+            "icon": "Settings",
+            "action": "open_team_settings",
+            "variant": "outline"
+          }
+        ]
+      },
+      {
+        "type": "team_stats",
+        "order": 2,
+        "layout": "grid-4",
+        "cards": [
+          {
+            "title": "إجمالي الأعضاء",
+            "icon": "Users",
+            "value_source": "team.totalMembers"
+          },
+          {
+            "title": "النشطون",
+            "icon": "UserCheck",
+            "value_source": "team.activeMembers"
+          },
+          {
+            "title": "الدعوات المعلقة",
+            "icon": "Mail",
+            "value_source": "team.pendingInvitations"
+          },
+          {
+            "title": "المديرون",
+            "icon": "Shield",
+            "value_source": "team.adminCount"
+          }
+        ]
+      },
+      {
+        "type": "members_list",
+        "order": 3,
+        "display": "table",
+        "columns": [
+          {
+            "header": "العضو",
+            "type": "user_info",
+            "includes": ["avatar", "name", "email"],
+            "width": "35%"
+          },
+          {
+            "header": "الدور",
+            "source": "member.role",
+            "format": "role_badge",
+            "align": "center"
+          },
+          {
+            "header": "الحالة",
+            "source": "member.status",
+            "format": "status_badge",
+            "align": "center"
+          },
+          {
+            "header": "تاريخ الانضمام",
+            "source": "member.joinedAt",
+            "format": "date",
+            "align": "center"
+          },
+          {
+            "header": "آخر نشاط",
+            "source": "member.lastActiveAt",
+            "format": "relative_time",
+            "align": "center"
+          },
+          {
+            "header": "الإجراءات",
+            "type": "actions",
+            "align": "left",
+            "actions": [
+              {
+                "label": "عرض الملف",
+                "icon": "Eye",
+                "action": "view_member_profile"
+              },
+              {
+                "label": "تعديل الدور",
+                "icon": "Shield",
+                "action": "change_member_role",
+                "condition": "currentUser.role === 'owner' || currentUser.role === 'admin'"
+              },
+              {
+                "label": "إيقاف",
+                "icon": "Ban",
+                "action": "suspend_member",
+                "condition": "member.status === 'active' && member.role !== 'owner'",
+                "variant": "destructive"
+              },
+              {
+                "label": "إزالة",
+                "icon": "Trash2",
+                "action": "remove_member",
+                "condition": "member.role !== 'owner'",
+                "variant": "destructive",
+                "confirm": true
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    
+    "invite_member_modal": {
+      "component": "InviteMemberModal.tsx",
+      "title": "دعوة عضو جديد",
+      "fields": [
+        {
+          "name": "email",
+          "label": "البريد الإلكتروني",
+          "type": "email",
+          "required": true,
+          "placeholder": "example@domain.com"
+        },
+        {
+          "name": "role",
+          "label": "الدور",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "member", "label": "عضو" },
+            { "value": "admin", "label": "مدير" }
+          ],
+          "default": "member"
+        },
+        {
+          "name": "message",
+          "label": "رسالة اختيارية",
+          "type": "textarea",
+          "placeholder": "أضف رسالة ترحيبية (اختياري)"
+        }
+      ],
+      "actions": [
+        {
+          "label": "إرسال الدعوة",
+          "action": "send_invitation",
+          "variant": "primary"
+        },
+        {
+          "label": "إلغاء",
+          "action": "close_modal",
+          "variant": "outline"
+        }
+      ]
+    }
+  },
+  
+  "digital_business_card": {
+    "component": "DigitalBusinessCard.tsx",
+    "location": "right_sidebar",
+    "route": "/digital-card",
+    "sections": [
+      {
+        "type": "header",
+        "order": 1,
+        "elements": [
+          {
+            "type": "cover_image",
+            "source": "user.coverImage",
+            "fallback": "/default-cover.jpg",
+            "editable": true,
+            "aspect_ratio": "3:1"
+          },
+          {
+            "type": "avatar",
+            "source": "user.avatar",
+            "fallback": "/default-avatar.png",
+            "position": "overlay-bottom",
+            "size": "large",
+            "editable": true,
+            "border": true
+          }
+        ]
+      },
+      {
+        "type": "basic_info",
+        "order": 2,
+        "fields": [
+          {
+            "label": "الاسم",
+            "source": "user.name",
+            "font_size": "24px",
+            "font_weight": "700",
+            "editable": true
+          },
+          {
+            "label": "المسمى الوظيفي",
+            "source": "user.jobTitle",
+            "font_size": "16px",
+            "color": "#6b7280",
+            "editable": true
+          },
+          {
+            "label": "الشركة",
+            "source": "user.company",
+            "icon": "Building2",
+            "editable": true
+          }
+        ]
+      },
+      {
+        "type": "contact_info",
+        "order": 3,
+        "title": "معلومات الاتصال",
+        "fields": [
+          {
+            "label": "الهاتف",
+            "source": "user.phone",
+            "icon": "Phone",
+            "format": "phone",
+            "copyable": true,
+            "clickable": true,
+            "action": "call"
+          },
+          {
+            "label": "البريد الإلكتروني",
+            "source": "user.email",
+            "icon": "Mail",
+            "copyable": true,
+            "clickable": true,
+            "action": "email"
+          },
+          {
+            "label": "واتساب",
+            "source": "user.whatsapp",
+            "icon": "MessageCircle",
+            "clickable": true,
+            "action": "whatsapp"
+          },
+          {
+            "label": "الموقع الإلكتروني",
+            "source": "user.website",
+            "icon": "Globe",
+            "clickable": true,
+            "action": "open_website"
+          }
+        ]
+      },
+      {
+        "type": "social_media",
+        "order": 4,
+        "title": "وسائل التواصل",
+        "layout": "horizontal-icons",
+        "platforms": [
+          {
+            "platform": "twitter",
+            "icon": "Twitter",
+            "source": "user.social.twitter",
+            "condition": "user.social.twitter"
+          },
+          {
+            "platform": "instagram",
+            "icon": "Instagram",
+            "source": "user.social.instagram",
+            "condition": "user.social.instagram"
+          },
+          {
+            "platform": "linkedin",
+            "icon": "Linkedin",
+            "source": "user.social.linkedin",
+            "condition": "user.social.linkedin"
+          },
+          {
+            "platform": "snapchat",
+            "icon": "Camera",
+            "source": "user.social.snapchat",
+            "condition": "user.social.snapchat"
+          }
+        ]
+      },
+      {
+        "type": "qr_code",
+        "order": 5,
+        "title": "رمز QR",
+        "source": "user.digitalCardUrl",
+        "size": "200px",
+        "downloadable": true,
+        "shareable": true
+      },
+      {
+        "type": "actions",
+        "order": 6,
+        "buttons": [
+          {
+            "label": "حفظ جهة اتصال",
+            "icon": "Download",
+            "action": "download_vcard",
+            "variant": "primary"
+          },
+          {
+            "label": "مشاركة",
+            "icon": "Share2",
+            "action": "share_card",
+            "variant": "outline"
+          },
+          {
+            "label": "تعديل",
+            "icon": "Edit",
+            "action": "edit_card",
+            "variant": "outline",
+            "visible_for_owner": true
+          }
+        ]
+      },
+      {
+        "type": "statistics",
+        "order": 7,
+        "title": "الإحصائيات",
+        "visible_for_owner": true,
+        "items": [
+          {
+            "label": "المشاهدات",
+            "source": "card.analytics.views",
+            "icon": "Eye"
+          },
+          {
+            "label": "مرات الحفظ",
+            "source": "card.analytics.saves",
+            "icon": "Download"
+          },
+          {
+            "label": "المشاركات",
+            "source": "card.analytics.shares",
+            "icon": "Share2"
+          }
+        ],
+        "link_to_analytics": "/digital-card/analytics"
+      }
+    ],
+    
+    "public_view": {
+      "route": "/card/:userId",
+      "visibility": "public",
+      "sections": [
+        "header",
+        "basic_info",
+        "contact_info",
+        "social_media",
+        "actions"
+      ],
+      "excluded_sections": [
+        "statistics"
+      ],
+      "tracking": {
+        "views": true,
+        "clicks": true,
+        "saves": true,
+        "shares": true
+      }
+    }
+  },
+  
+  "workspace_switcher": {
+    "component": "WorkspaceSwitcher.tsx",
+    "location": "right_sidebar",
+    "order": 1,
+    "description": "نظام التبديل بين مساحات العمل المختلفة",
+    "elements": [
+      {
+        "type": "current_workspace_display",
+        "elements": [
+          {
+            "type": "icon",
+            "source": "currentWorkspace.logo",
+            "fallback_icon_by_type": {
+              "personal": "User",
+              "company": "Building2",
+              "team": "Users"
+            },
+            "size": "40px"
+          },
+          {
+            "type": "info",
+            "fields": [
+              {
+                "type": "name",
+                "source": "currentWorkspace.name",
+                "font_size": "16px",
+                "font_weight": "600"
+              },
+              {
+                "type": "role",
+                "source": "currentMembership.role",
+                "format": "role_badge_small"
+              }
+            ]
+          },
+          {
+            "type": "dropdown_trigger",
+            "icon": "ChevronDown"
+          }
+        ]
+      },
+      {
+        "type": "dropdown_menu",
+        "sections": [
+          {
+            "type": "workspaces_list",
+            "title": "مساحات العمل",
+            "items_source": "workspaces",
+            "item_component": "WorkspaceItem",
+            "max_visible": 10,
+            "scrollable": true
+          },
+          {
+            "type": "separator"
+          },
+          {
+            "type": "actions",
+            "items": [
+              {
+                "label": "إنشاء مساحة جديدة",
+                "icon": "Plus",
+                "action": "open_create_workspace_modal",
+                "condition": "canCreateWorkspace"
+              },
+              {
+                "label": "إدارة المساحات",
+                "icon": "Settings",
+                "action": "navigate_to_workspace_settings"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    
+    "workspace_item": {
+      "elements": [
+        {
+          "type": "icon",
+          "source": "workspace.logo",
+          "size": "32px"
+        },
+        {
+          "type": "info",
+          "fields": [
+            {
+              "type": "name",
+              "source": "workspace.name"
+            },
+            {
+              "type": "type",
+              "source": "workspace.type",
+              "format": "workspace_type_arabic",
+              "font_size": "12px",
+              "color": "#6b7280"
+            }
+          ]
+        },
+        {
+          "type": "current_indicator",
+          "condition": "workspace.id === currentWorkspace.id",
+          "icon": "Check",
+          "color": "#22c55e"
+        },
+        {
+          "type": "notification_badge",
+          "source": "workspaceNotifications[workspace.id]",
+          "condition": "workspaceNotifications[workspace.id] > 0"
+        }
+      ],
+      "click_action": "switch_workspace"
+    },
+    
+    "create_workspace_modal": {
+      "title": "إنشاء مساحة عمل جديدة",
+      "fields": [
+        {
+          "name": "name",
+          "label": "اسم المساحة",
+          "type": "text",
+          "required": true,
+          "placeholder": "مثال: شركتي العقارية"
+        },
+        {
+          "name": "type",
+          "label": "النوع",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "personal", "label": "شخصية", "description": "مساحة شخصية للعمل الفردي" },
+            { "value": "company", "label": "شركة", "description": "مساحة لشركة عقارية" },
+            { "value": "team", "label": "فريق", "description": "مساحة لفريق عمل" }
+          ]
+        },
+        {
+          "name": "description",
+          "label": "الوصف (اختياري)",
+          "type": "textarea",
+          "placeholder": "وصف مختصر للمساحة"
+        },
+        {
+          "name": "plan",
+          "label": "الباقة",
+          "type": "select",
+          "required": true,
+          "options": [
+            { "value": "free", "label": "مجاني", "description": "ميزات محدودة" },
+            { "value": "basic", "label": "أساسي", "description": "299 ر.س/شهر" },
+            { "value": "professional", "label": "احترافي", "description": "599 ر.س/شهر" },
+            { "value": "enterprise", "label": "مؤسسي", "description": "تواصل معنا" }
+          ],
+          "default": "basic"
+        }
+      ],
+      "actions": [
+        {
+          "label": "إنشاء",
+          "action": "create_workspace",
+          "variant": "primary"
+        },
+        {
+          "label": "إلغاء",
+          "action": "close_modal",
+          "variant": "outline"
+        }
+      ]
+    },
+    
+    "scenarios": [
+      {
+        "name": "موظف في شركة + حساب شخصي",
+        "description": "المستخدم موظف في شركة ولديه حساب شخصي منفصل",
+        "workspaces": [
+          {
+            "type": "company",
+            "name": "شركة العقارات المتميزة",
+            "role": "member",
+            "subscription": "enterprise"
+          },
+          {
+            "type": "personal",
+            "name": "حسابي الشخصي",
+            "role": "owner",
+            "subscription": "basic"
+          }
+        ],
+        "flow": "يمكنه التبديل بين حساب الشركة وحسابه الشخصي بسهولة"
+      },
+      {
+        "name": "موظف في عدة شركات",
+        "description": "المستخدم يعمل في أكثر من شركة",
+        "workspaces": [
+          {
+            "type": "company",
+            "name": "الشركة الأولى",
+            "role": "member"
+          },
+          {
+            "type": "company",
+            "name": "الشركة الثانية",
+            "role": "admin"
+          },
+          {
+            "type": "personal",
+            "name": "حسابي الشخصي",
+            "role": "owner"
+          }
+        ],
+        "flow": "يمكنه التنقل بين جميع المساحات والحفاظ على سياق كل منها"
+      }
+    ]
+  },
+  
+  "api_endpoints": {
+    "base_url": "/api",
+    "endpoints": [
+      {
+        "path": "/my-platform/stats",
+        "method": "GET",
+        "description": "جلب إحصائيات منصتي",
+        "params": {
+          "userId": "required"
+        },
+        "response": "MyPlatformStats"
+      },
+      {
+        "path": "/offers",
+        "method": "GET",
+        "description": "جلب عروض المستخدم",
+        "params": {
+          "userId": "required",
+          "page": "optional",
+          "limit": "optional",
+          "status": "optional",
+          "type": "optional",
+          "platform": "optional"
+        },
+        "response": "Offer[]"
+      },
+      {
+        "path": "/offers/:id",
+        "method": "GET",
+        "description": "جلب تفاصيل عرض",
+        "params": {
+          "id": "required"
+        },
+        "response": "Offer"
+      },
+      {
+        "path": "/offers",
+        "method": "POST",
+        "description": "إنشاء عرض جديد",
+        "body": "CreateOfferData",
+        "response": "Offer"
+      },
+      {
+        "path": "/offers/:id",
+        "method": "PUT",
+        "description": "تحديث عرض",
+        "params": {
+          "id": "required"
+        },
+        "body": "UpdateOfferData",
+        "response": "Offer"
+      },
+      {
+        "path": "/offers/:id",
+        "method": "DELETE",
+        "description": "حذف عرض",
+        "params": {
+          "id": "required"
+        },
+        "response": "{ success: boolean }"
+      },
+      {
+        "path": "/platforms",
+        "method": "GET",
+        "description": "جلب المنصات المتصلة",
+        "params": {
+          "userId": "required"
+        },
+        "response": "Platform[]"
+      },
+      {
+        "path": "/platforms/:id/connect",
+        "method": "POST",
+        "description": "ربط منصة",
+        "params": {
+          "id": "required"
+        },
+        "body": "ConnectionCredentials",
+        "response": "{ success: boolean }"
+      },
+      {
+        "path": "/platforms/:id/disconnect",
+        "method": "POST",
+        "description": "فصل منصة",
+        "params": {
+          "id": "required"
+        },
+        "response": "{ success: boolean }"
+      },
+      {
+        "path": "/analytics/dashboard",
+        "method": "GET",
+        "description": "جلب تحليلات المنصة",
+        "params": {
+          "userId": "required",
+          "dateFrom": "optional",
+          "dateTo": "optional"
+        },
+        "response": "AnalyticsDashboard"
+      },
+      {
+        "path": "/workspace/list",
+        "method": "GET",
+        "description": "جلب مساحات العمل",
+        "params": {
+          "userId": "required"
+        },
+        "response": "Workspace[]"
+      },
+      {
+        "path": "/workspace/switch",
+        "method": "POST",
+        "description": "التبديل بين المساحات",
+        "body": {
+          "userId": "required",
+          "workspaceId": "required"
+        },
+        "response": "{ success: boolean }"
+      },
+      {
+        "path": "/workspace/create",
+        "method": "POST",
+        "description": "إنشاء مساحة عمل",
+        "body": "CreateWorkspaceData",
+        "response": "Workspace"
+      },
+      {
+        "path": "/digital-card/:userId",
+        "method": "GET",
+        "description": "جلب بطاقة العمل الرقمية",
+        "params": {
+          "userId": "required"
+        },
+        "response": "DigitalCard"
+      },
+      {
+        "path": "/digital-card/analytics",
+        "method": "GET",
+        "description": "جلب تحليلات البطاقة",
+        "params": {
+          "userId": "required"
+        },
+        "response": "CardAnalytics"
+      },
+      {
+        "path": "/team/members",
+        "method": "GET",
+        "description": "جلب أعضاء الفريق",
+        "params": {
+          "workspaceId": "required"
+        },
+        "response": "TeamMember[]"
+      },
+      {
+        "path": "/team/invite",
+        "method": "POST",
+        "description": "دعوة عضو جديد",
+        "body": "InviteMemberData",
+        "response": "{ success: boolean }"
+      }
+    ]
+  },
+  
+  "event_flow": {
+    "user_opens_my_platform": [
+      "1. تحميل بيانات المستخدم",
+      "2. جلب الإحصائيات العامة (API: /my-platform/stats)",
+      "3. جلب العروض (API: /offers)",
+      "4. جلب الطلبات (API: /requests)",
+      "5. جلب المنصات المتصلة (API: /platforms)",
+      "6. عرض التبويب الافتراضي (overview)",
+      "7. تفعيل Real-time Updates للإشعارات"
+    ],
+    
+    "user_clicks_offer_card": [
+      "1. جلب تفاصيل العرض (API: /offers/:id)",
+      "2. زيادة عداد المشاهدات (+1)",
+      "3. فتح نافذة التفاصيل (Modal)",
+      "4. تحميل الصور والفيديوهات",
+      "5. عرض الإحصائيات",
+      "6. تتبع الحدث (Analytics: offer_viewed)"
+    ],
+    
+    "user_creates_offer": [
+      "1. فتح نموذج إنشاء العرض",
+      "2. ملء الحقول المطلوبة",
+      "3. رفع الصور",
+      "4. اختيار المنصات للنشر",
+      "5. إرسال البيانات (API: POST /offers)",
+      "6. نشر على المنصات المحددة (Background Job)",
+      "7. إضافة للقائمة",
+      "8. إشعار النجاح",
+      "9. تحديث الإحصائيات"
+    ],
+    
+    "user_switches_workspace": [
+      "1. فتح قائمة المساحات",
+      "2. اختيار مساحة جديدة",
+      "3. تحديث في قاعدة البيانات (API: /workspace/switch)",
+      "4. حفظ في التخزين المحلي",
+      "5. إعادة تحميل جميع البيانات",
+      "6. تحديث Context",
+      "7. إعادة تحميل الصفحة",
+      "8. عرض بيانات المساحة الجديدة"
+    ],
+    
+    "user_shares_digital_card": [
+      "1. فتح البطاقة الرقمية",
+      "2. الضغط على زر المشاركة",
+      "3. اختيار طريقة المشاركة (QR/Link/Social)",
+      "4. توليد رابط فريد",
+      "5. مشاركة عبر المنصة المختارة",
+      "6. تتبع الحدث (Analytics: card_shared)",
+      "7. زيادة عداد المشاركات (+1)"
+    ]
+  },
+  
+  "dependencies": {
+    "my_platform_depends_on": [
+      "authentication (user must be logged in)",
+      "workspace_context (current workspace)",
+      "offers_api",
+      "requests_api",
+      "platforms_api",
+      "analytics_api",
+      "notifications_system",
+      "ai_assistant"
+    ],
+    
+    "digital_card_depends_on": [
+      "user_profile",
+      "workspace_context",
+      "analytics_api",
+      "qr_code_generator"
+    ],
+    
+    "workspace_switcher_depends_on": [
+      "workspace_api",
+      "authentication",
+      "local_storage"
+    ],
+    
+    "team_section_depends_on": [
+      "workspace_context",
+      "role_permissions",
+      "team_api",
+      "invitation_system"
+    ]
+  },
+  
+  "integrations": {
+    "with_notifications": {
+      "events": [
+        "offer_created",
+        "offer_published",
+        "offer_inquiry_received",
+        "platform_connected",
+        "team_member_joined",
+        "workspace_switched"
+      ],
+      "notification_types": [
+        "success",
+        "info",
+        "warning",
+        "error"
+      ]
+    },
+    
+    "with_ai_assistant": {
+      "commands": [
+        "إنشاء عرض جديد",
+        "عرض إحصائيات منصتي",
+        "مشاركة بطاقة أعمالي",
+        "التبديل إلى مساحة [اسم المساحة]",
+        "عرض أفضل العروض أداءً"
+      ],
+      "context_aware": true
+    },
+    
+    "with_analytics": {
+      "tracked_events": [
+        "page_view",
+        "tab_switch",
+        "offer_viewed",
+        "offer_created",
+        "offer_edited",
+        "offer_deleted",
+        "offer_shared",
+        "platform_connected",
+        "card_viewed",
+        "card_shared",
+        "workspace_switched"
+      ]
+    }
+  },
+  
+  "theme": {
+    "colors": {
+      "primary": "#01411C",
+      "secondary": "#D4AF37",
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "error": "#ef4444",
+      "info": "#3b82f6",
+      "background": "#FFFFFF",
+      "surface": "#F8F9FA",
+      "text": "#111827",
+      "text_muted": "#6b7280"
+    },
+    "rtl": true,
+    "font_family": "Cairo, sans-serif"
+  }
+}
