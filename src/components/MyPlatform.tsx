@@ -24,7 +24,7 @@ import {
   List,
   TrendingUp
 } from 'lucide-react';
-import { getAllPublishedAds, PublishedAd, groupAdsBySmartPath, GroupedAds } from '../utils/publishedAds';
+import { getAllPublishedAds, PublishedAd } from '../utils/publishedAds';
 import { getImage } from '../utils/imageStorage';
 import { useDashboardContext } from '../context/DashboardContext';
 
@@ -54,11 +54,6 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
   const [searchQuery, setSearchQuery] = useState('');
   const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({ min: '', max: '' });
   const [selectedAdNumber, setSelectedAdNumber] = useState<string | null>(null);
-  
-  // 🆕 نمط العرض: grouped (رئيسي + فرعي) أو flat (عشوائي)
-  const [displayMode, setDisplayMode] = useState<'grouped' | 'flat'>('grouped');
-  const [groupedAds, setGroupedAds] = useState<GroupedAds[]>([]);
-  const [selectedGroup, setSelectedGroup] = useState<GroupedAds | null>(null);
   
   // 🆕 عرض تفاصيل العقار
   const [selectedAdForDetail, setSelectedAdForDetail] = useState<PublishedAd | null>(null);
@@ -170,7 +165,7 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
           profileImage: profileUrl || ''
         }));
 
-        console.log('✅ تم تحميل ا��صور وحفظها في ref:', {
+        console.log('✅ تم تحميل اصور وحفظها في ref:', {
           cover: !!coverUrl,
           logo: !!logoUrl,
           profile: !!profileUrl
@@ -360,22 +355,8 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
     setFilteredAds(filtered);
   }, [activeTab, searchQuery, priceRange, publishedAds]);
 
-  // 🆕 تجميع الإعلانات حسب المسار الذكي
-  useEffect(() => {
-    if (displayMode === 'grouped') {
-      const grouped = groupAdsBySmartPath();
-      setGroupedAds(grouped);
-      console.log('📁 تم تجميع الإعلانات:', grouped.length, 'مجموعة');
-    }
-  }, [publishedAds, displayMode]);
-
   // تحديث إحصائيات المشاهدة
   const handleViewAd = (ad: PublishedAd) => {
-    // ✅ إغلاق مودال المجموعة أولاً إذا كان مفتوحاً
-    if (selectedGroup) {
-      setSelectedGroup(null);
-    }
-    // ثم فتح تفاصيل العقار
     setSelectedAdForDetail(ad);
   };
 
@@ -484,79 +465,6 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
     );
   };
 
-  // 🆕 بطاقة المجموعة الرئيسية
-  const GroupCard = ({ group }: { group: GroupedAds }) => {
-    const handleClick = () => {
-      setSelectedGroup(group);
-    };
-
-    return (
-      <Card 
-        className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border-2 border-[#D4AF37]/30"
-        onClick={handleClick}
-      >
-        {/* صورة أول إعلان */}
-        <div className="relative h-64 overflow-hidden">
-          <img
-            src={group.firstImage || 'https://via.placeholder.com/400x300?text=عقار'}
-            alt={group.path}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-          />
-          
-          {/* Badge عدد الفروع */}
-          <div className="absolute top-4 right-4">
-            <Badge className="bg-[#01411C] text-[#D4AF37] text-lg px-4 py-2">
-              {group.count} عرض
-            </Badge>
-          </div>
-
-          {/* التدرج */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-        </div>
-
-        <CardContent className="p-4 space-y-3">
-          {/* معلومات المسار */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-gray-600">
-              <MapPin className="w-4 h-4 text-[#D4AF37]" />
-              <span className="font-bold text-[#01411C]">{group.pathParts.city}</span>
-              <span className="text-gray-400">•</span>
-              <span>{group.pathParts.district}</span>
-            </div>
-            
-            <div className="flex items-center gap-3 flex-wrap">
-              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-                <Building className="w-3 h-3 ml-1" />
-                {group.pathParts.propertyType}
-              </Badge>
-              
-              <Badge variant="outline" className={
-                group.pathParts.purpose === 'بيع' 
-                  ? 'bg-green-50 text-green-700 border-green-200'
-                  : 'bg-purple-50 text-purple-700 border-purple-200'
-              }>
-                <DollarSign className="w-3 h-3 ml-1" />
-                {group.pathParts.purpose}
-              </Badge>
-              
-              <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
-                {group.pathParts.category === 'سكني' ? '🏠' : '🏢'} {group.pathParts.category}
-              </Badge>
-            </div>
-          </div>
-
-          {/* زر العرض */}
-          <Button 
-            className="w-full bg-gradient-to-r from-[#01411C] to-[#065f41] text-[#D4AF37] hover:from-[#065f41] hover:to-[#01411C]"
-          >
-            عرض جميع العقارات ({group.count})
-            <Eye className="w-4 h-4 mr-2" />
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  };
-
   return (
     <div 
       className="bg-gradient-to-b from-gray-50 to-white transition-all duration-300" 
@@ -565,48 +473,6 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
         marginLeft: leftSidebarOpen ? "350px" : "0"
       }}
     >
-      {/* 🆕 مودال عرض الفروع */}
-      {selectedGroup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={() => setSelectedGroup(null)}>
-          <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-2xl font-bold text-[#01411C]">
-                  {selectedGroup.pathParts.city} - {selectedGroup.pathParts.district}
-                </h2>
-                <div className="flex items-center gap-2 mt-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700">
-                    {selectedGroup.pathParts.propertyType}
-                  </Badge>
-                  <Badge variant="outline" className="bg-green-50 text-green-700">
-                    {selectedGroup.pathParts.purpose}
-                  </Badge>
-                  <Badge variant="outline" className="bg-amber-50 text-amber-700">
-                    {selectedGroup.pathParts.category}
-                  </Badge>
-                  <span className="text-gray-500">• {selectedGroup.count} عرض</span>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                onClick={() => setSelectedGroup(null)}
-                className="rounded-full w-10 h-10 p-0"
-              >
-                ✕
-              </Button>
-            </div>
-            
-            <div className="p-6 grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {selectedGroup.ads.map(ad => (
-                <OfferCard key={ad.id} ad={ad} />
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    
-      {/* الهيدر معطل مؤقتاً - يمكن إضافته لاحقاً */}
-
       {/* المحتوى الرئيسي */}
       <div className="max-w-7xl mx-auto px-4 py-8 min-h-screen">
         {/* النبذة التعريفية */}
@@ -619,7 +485,7 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
           </Card>
         )}
 
-        {/* إحصائ��ات سريعة */}
+        {/* إحصائات سريعة */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           <Card className="bg-gradient-to-br from-[#01411C] to-[#065f41] text-white">
             <CardContent className="p-4 text-center">
@@ -706,30 +572,6 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
 
           {/* أزرار طريقة العرض */}
           <div className="flex gap-2 mr-4">
-            {/* 🆕 نمط العرض: مجموعات أو عشوائي */}
-            <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-300">
-              <Button
-                size="sm"
-                variant={displayMode === 'grouped' ? 'default' : 'outline'}
-                onClick={() => setDisplayMode('grouped')}
-                className={displayMode === 'grouped' ? 'bg-[#01411C] text-[#D4AF37]' : ''}
-                title="عرض مجموعات (رئيسي + فروع)"
-              >
-                <Building className="w-4 h-4 ml-1" />
-                مجموعات
-              </Button>
-              <Button
-                size="sm"
-                variant={displayMode === 'flat' ? 'default' : 'outline'}
-                onClick={() => setDisplayMode('flat')}
-                className={displayMode === 'flat' ? 'bg-[#01411C] text-[#D4AF37]' : ''}
-                title="عرض عشوائي (جميع العروض)"
-              >
-                <Grid className="w-4 h-4 ml-1" />
-                عشوائي
-              </Button>
-            </div>
-            
             <Button
               size="sm"
               variant={viewMode === 'grid' ? 'default' : 'outline'}
@@ -750,46 +592,23 @@ export function MyPlatform({ user, onBack, showHeader = true }: MyPlatformProps)
         </div>
 
         {/* عرض العقارات */}
-        {displayMode === 'flat' ? (
-          /* العرض العشوائي (الطريقة القديمة) */
-          filteredAds.length === 0 ? (
-            <Card className="p-12">
-              <div className="text-center text-gray-500">
-                <Home className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-xl">لا توجد عقارات متاحة حالياً</p>
-                <p className="text-sm mt-2">جارٍ إضافة عقارات جديدة قريباً</p>
-              </div>
-            </Card>
-          ) : (
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
-              : "space-y-4"
-            }>
-              {filteredAds.map(ad => (
-                <OfferCard key={ad.id} ad={ad} />
-              ))}
+        {filteredAds.length === 0 ? (
+          <Card className="p-12">
+            <div className="text-center text-gray-500">
+              <Home className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <p className="text-xl">لا توجد عقارات متاحة حالياً</p>
+              <p className="text-sm mt-2">جارٍ إضافة عقارات جديدة قريباً</p>
             </div>
-          )
+          </Card>
         ) : (
-          /* 🆕 العرض المجمع (رئيسي + فروع) */
-          groupedAds.length === 0 ? (
-            <Card className="p-12">
-              <div className="text-center text-gray-500">
-                <Building className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-xl">لا توجد مجموعات متاحة حالياً</p>
-                <p className="text-sm mt-2">جارٍ إضافة عقارات جديدة قريباً</p>
-              </div>
-            </Card>
-          ) : (
-            <div className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
-              : "space-y-4"
-            }>
-              {groupedAds.map(group => (
-                <GroupCard key={group.path} group={group} />
-              ))}
-            </div>
-          )
+          <div className={viewMode === 'grid' 
+            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
+            : "space-y-4"
+          }>
+            {filteredAds.map(ad => (
+              <OfferCard key={ad.id} ad={ad} />
+            ))}
+          </div>
         )}
 
         {/* Footer */}

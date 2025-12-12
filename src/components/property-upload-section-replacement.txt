@@ -1,0 +1,177 @@
+              <CardContent className="space-y-4">
+                {/* زر فتح الخريطة */}
+                {!showMapPicker && (
+                  <div className="flex items-center justify-between p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
+                    <div className="flex items-center gap-3">
+                      <Target className="w-6 h-6 text-blue-600" />
+                      <div>
+                        <h4 className="font-bold text-blue-800 text-right">تحديد الموقع من الخريطة</h4>
+                        <p className="text-sm text-blue-600 text-right">انقر لفتح الخريطة التفاعلية وتحديد الموقع بدقة</p>
+                      </div>
+                    </div>
+                    <Button 
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                      onClick={() => setShowMapPicker(true)}
+                    >
+                      <MapPin className="w-4 h-4 mr-2" />
+                      فتح الخريطة
+                    </Button>
+                  </div>
+                )}
+
+                {/* الخريطة التفاعلية */}
+                {showMapPicker && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-bold text-blue-800">انقر على الخريطة لتحديد الموقع</h4>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMapPicker(false)}
+                      >
+                        <X className="w-4 h-4 ml-2" />
+                        إغلاق الخريطة
+                      </Button>
+                    </div>
+                    <MapLocationPicker onLocationSelect={handleMapLocationSelect} />
+                  </div>
+                )}
+
+                {/* العنوان الوطني (6 حقول) */}
+                <div className="bg-gradient-to-br from-red-50 to-orange-50 rounded-xl p-4 mb-4 border border-red-200">
+                  <h3 className="font-bold text-gray-900 mb-3 flex items-center gap-2 text-right">
+                    <Building className="w-4 h-4 text-red-600" />
+                    العنوان الوطني (تلقائي من الخريطة)
+                  </h3>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    {/* 1. المدينة */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block text-right">المدينة *</label>
+                      <select
+                        value={propertyData.locationDetails.city}
+                        onChange={(e) => setPropertyData(prev => ({ 
+                          ...prev, 
+                          locationDetails: { ...prev.locationDetails, city: e.target.value } 
+                        }))}
+                        className="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm bg-white text-right"
+                        dir="rtl"
+                      >
+                        <option value="">اختر المدينة</option>
+                        {SAUDI_CITIES.map(city => (
+                          <option key={city} value={city}>{city}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    {/* 2. الحي */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block text-right">الحي</label>
+                      <input
+                        placeholder="الحي"
+                        value={propertyData.locationDetails.district}
+                        onChange={(e) => setPropertyData(prev => ({ 
+                          ...prev, 
+                          locationDetails: { ...prev.locationDetails, district: e.target.value } 
+                        }))}
+                        className="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    {/* 3. الشارع */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block text-right">الشارع</label>
+                      <input
+                        placeholder="اسم الشارع"
+                        value={propertyData.locationDetails.street}
+                        onChange={(e) => setPropertyData(prev => ({ 
+                          ...prev, 
+                          locationDetails: { ...prev.locationDetails, street: e.target.value } 
+                        }))}
+                        className="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    {/* 4. رقم المبنى */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block text-right">رقم المبنى</label>
+                      <input
+                        placeholder="رقم المبنى"
+                        value={propertyData.locationDetails.buildingNumber}
+                        onChange={(e) => setPropertyData(prev => ({ 
+                          ...prev, 
+                          locationDetails: { ...prev.locationDetails, buildingNumber: e.target.value } 
+                        }))}
+                        className="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    {/* 5. الرمز البريدي */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block text-right">الرمز البريدي</label>
+                      <input
+                        placeholder="الرمز البريدي"
+                        value={propertyData.locationDetails.postalCode}
+                        onChange={(e) => setPropertyData(prev => ({ 
+                          ...prev, 
+                          locationDetails: { ...prev.locationDetails, postalCode: e.target.value } 
+                        }))}
+                        className="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                    
+                    {/* 6. الرقم الإضافي */}
+                    <div>
+                      <label className="text-xs font-medium text-gray-700 mb-1 block text-right">الرقم الإضافي</label>
+                      <input
+                        placeholder="الرقم الإضافي"
+                        value={propertyData.locationDetails.additionalNumber}
+                        onChange={(e) => setPropertyData(prev => ({ 
+                          ...prev, 
+                          locationDetails: { ...prev.locationDetails, additionalNumber: e.target.value } 
+                        }))}
+                        className="w-full px-3 py-2 border-2 border-red-300 rounded-lg text-sm text-right"
+                        dir="rtl"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* عرض الإحداثيات */}
+                {propertyData.locationDetails.latitude !== 0 && (
+                  <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <h4 className="text-xs font-bold text-blue-900 mb-2 text-right">📍 الإحداثيات المحفوظة:</h4>
+                    <div className="grid grid-cols-2 gap-2 text-xs">
+                      <div className="text-right">
+                        <span className="text-gray-600">خط الطول:</span>
+                        <span className="font-mono font-bold text-blue-900 mr-2">
+                          {propertyData.locationDetails.longitude?.toFixed(6)}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-gray-600">خط العرض:</span>
+                        <span className="font-mono font-bold text-blue-900 mr-2">
+                          {propertyData.locationDetails.latitude?.toFixed(6)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* زر جلب بيانات السوق */}
+                {propertyData.locationDetails.city && propertyData.locationDetails.district && (
+                  <div className="text-center">
+                    <Button 
+                      onClick={fetchMarketData}
+                      className="bg-[#01411C] text-white hover:bg-[#065f41]"
+                    >
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      جلب بيانات السوق للمنطقة
+                    </Button>
+                  </div>
+                )}
+              </CardContent>

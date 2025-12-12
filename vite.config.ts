@@ -16,6 +16,7 @@
         'react-day-picker@8.10.1': 'react-day-picker',
         'next-themes@0.4.6': 'next-themes',
         'lucide-react@0.487.0': 'lucide-react',
+        'leaflet@1.9.4': 'leaflet',
         'input-otp@1.4.2': 'input-otp',
         'figma:asset/3821378221125549f243ee4345da40c6457c2dae.png': path.resolve(__dirname, './src/assets/3821378221125549f243ee4345da40c6457c2dae.png'),
         'embla-carousel-react@8.6.0': 'embla-carousel-react',

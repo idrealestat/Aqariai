@@ -12,6 +12,14 @@ import { useDashboardContext } from '../context/DashboardContext';
 import { savePublishedAd, generateAdNumber, type PublishedAd } from '../utils/publishedAds';
 import { ensureCustomerExists } from '../utils/customersManager';
 import { notifyNewCustomer, notifyCustomerUpdated, notifyAdPublished } from '../utils/notificationsSystem';
+import { toast } from 'sonner@2.0.3';
+import L from 'leaflet@1.9.4';
+import * as turf from '@turf/turf';
+import { buildingsGeoJSON } from './map/buildingsData';
+import { amenitiesGeoJSON, amenityColors, amenityLabels } from './map/amenitiesData';
+import { floodZonesGeoJSON, riskColors, severityLabels } from './map/floodZonesData';
+import { analyzeSpatialIntelligence, type SpatialAnalysisOutput } from '../utils/spatialIntelligence';
+import { SpatialIntelligenceReport } from './SpatialIntelligenceReport';
 import { 
   ArrowRight, 
   Upload,
@@ -47,7 +55,8 @@ import {
   Target,
   RefreshCw,
   ExternalLink,
-  MapIcon
+  MapIcon,
+  Loader2
 } from 'lucide-react';
 
 interface PropertyUploadCompleteProps {
@@ -223,6 +232,398 @@ interface Platform {
   isConnected: boolean;
 }
 
+// إصلاح أيقونات Leaflet (إلزامي)
+if (typeof window !== 'undefined') {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+}
+
+// المدن السعودية (20 مدينة)
+const SAUDI_CITIES = [
+  'الرياض', 'جدة', 'مكة', 'المدينة', 'الدمام', 'الخبر', 'الطائف', 'تبوك', 
+  'بريدة', 'خميس مشيط', 'الهفوف', 'حائل', 'نجران', 'الجبيل', 'ضبا', 'القطيف',
+  'الخرج', 'أبها', 'ينبع', 'عرعر'
+];
+
+// مكون الخريطة التفاعلية
+const MapLocationPicker = ({ onLocationSelect }: { onLocationSelect: (data: any) => void }) => {
+  console.log('🗺️ MapLocationPicker component rendered');
+  
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<any>(null);
+  const markerRef = useRef<any>(null);
+  const [buildingsData, setBuildingsData] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [snappingEnabled, setSnappingEnabled] = useState(true);
+  const [cssLoaded, setCssLoaded] = useState(false);
+  const [spatialReport, setSpatialReport] = useState<SpatialAnalysisOutput | null>(null);
+  const [showSpatialReport, setShowSpatialReport] = useState(false);
+
+  // تحميل Leaflet CSS من CDN مرة واحدة
+  useEffect(() => {
+    // تحقق إذا كان CSS محملاً مسبقاً
+    const existingLink = document.querySelector('link[href*="leaflet"]');
+    if (existingLink) {
+      setCssLoaded(true);
+      return;
+    }
+
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';
+    link.integrity = 'sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw==';
+    link.crossOrigin = 'anonymous';
+    link.onload = () => {
+      console.log('✅ Leaflet CSS loaded successfully');
+      setCssLoaded(true);
+    };
+    link.onerror = () => {
+      console.error('❌ Failed to load Leaflet CSS');
+      setCssLoaded(true); // المتابعة حتى مع فشل التحميل
+    };
+    document.head.appendChild(link);
+  }, []);
+
+  useEffect(() => {
+    console.log('📦 Loading buildings data...');
+    setBuildingsData(buildingsGeoJSON);
+    setIsLoading(false);
+    console.log('✅ Buildings data loaded, isLoading set to false');
+  }, []);
+
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current || !cssLoaded) return;
+
+    console.log('🚀 Starting map initialization...');
+
+    // تأخير بسيط للتأكد من تحميل CSS واستقرار DOM
+    const timer = setTimeout(() => {
+      try {
+        console.log('🗺️ Initializing Leaflet map...');
+        
+        // تهيئة Leaflet
+        const map = L.map(mapContainerRef.current!).setView([24.7136, 46.6753], 13);
+        
+        // طبقة OpenStreetMap (الشوارع)
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        });
+        
+        // طبقة الأقمار الصناعية (Esri World Imagery)
+        const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 19,
+          attribution: '© Esri'
+        });
+        
+        // إضافة الطبقة الافتراضية (الشوارع)
+        streetLayer.addTo(map);
+        
+        // التحكم في الطبقات
+        const baseLayers = {
+          '🗺️ الشوارع': streetLayer,
+          '🛰️ أقمار صناعية': satelliteLayer
+        };
+        L.control.layers(baseLayers).addTo(map);
+        
+        mapRef.current = map;
+        console.log('✅ Map initialized successfully with layers');
+
+        // Marker أحمر
+        const redIcon = L.icon({
+          iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+          shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+          iconSize: [25, 41],
+          iconAnchor: [12, 41],
+          popupAnchor: [1, -34],
+          shadowSize: [41, 41]
+        });
+        
+        const marker = L.marker([24.7136, 46.6753], { 
+          icon: redIcon,
+          draggable: false 
+        }).addTo(map);
+        
+        // Popup أولي
+        marker.bindPopup(`
+          <div style="text-align: right; font-family: 'Tajawal', sans-serif; direction: rtl;">
+            <strong style="color: #01411C;">📍 الرياض</strong><br/>
+            <span style="color: #999; font-size: 12px;">انقر على الخريطة لتحديد موقع جديد</span>
+          </div>
+        `);
+        
+        // إضافة دائرة حول العلامة
+        const circle = L.circle([24.7136, 46.6753], {
+          color: '#D4AF37',
+          fillColor: '#D4AF37',
+          fillOpacity: 0.2,
+          radius: 50
+        }).addTo(map);
+        
+        markerRef.current = marker;
+        console.log('✅ Marker added successfully');
+        
+        // حفظ مرجع الدائرة
+        const circleRef = { current: circle };
+
+        // معالج النقر
+        console.log('📝 ✅ Registering click handler on map...');
+        map.on('click', async (e: any) => {
+          console.log('');
+          console.log('🖱️🖱️🖱️ ========== CLICK DETECTED! ========== 🖱️🖱️🖱️');
+          console.log('');
+          
+      const lng = e.latlng.lng;
+      const lat = e.latlng.lat;
+      
+      let finalLng = lng;
+      let finalLat = lat;
+      let snappedBuilding = null;
+      
+      console.log('🖱️ Click coordinates:', { lat, lng });
+      console.log('🔧 Snapping enabled:', snappingEnabled);
+      
+      if (buildingsData && buildingsData.features) {
+        console.log('🏢 Total buildings:', buildingsData.features.length);
+      }
+      
+      // خطوة 1: Snapping باستخدام Turf.js
+      // حد أقصى للمسافة للـ snapping (500 متر)
+      const MAX_SNAP_DISTANCE = 0.5; // بالكيلومتر
+      
+      if (snappingEnabled && buildingsData) {
+        try {
+          const clickPoint = turf.point([lng, lat]);
+          const nearest = turf.nearestPoint(clickPoint, buildingsData);
+          
+          const distance = nearest.properties.distanceToPoint;
+          console.log('🎯 Nearest building found:', nearest.properties.name);
+          console.log('📏 Distance:', distance, 'km');
+          
+          // فقط استخدم snapping إذا كان المبنى قريب (< 500m)
+          if (nearest && nearest.geometry && distance <= MAX_SNAP_DISTANCE) {
+            finalLng = nearest.geometry.coordinates[0];
+            finalLat = nearest.geometry.coordinates[1];
+            snappedBuilding = nearest.properties;
+            
+            console.log('✅ Snapped to building (within 500m):', snappedBuilding);
+            console.log('📍 Snapped coordinates:', { lat: finalLat, lng: finalLng });
+          } else if (distance > MAX_SNAP_DISTANCE) {
+            console.log('⚠️ Building too far (' + distance.toFixed(2) + ' km) - using raw coordinates instead');
+          }
+        } catch (err) {
+          console.error('❌ خطأ في Snapping:', err);
+        }
+      } else {
+        console.log('⚠️ Snapping DISABLED - using raw coordinates');
+      }
+      
+      // خطوة 2: تحريك Marker مع animation
+      if (markerRef.current) {
+        console.log('🎯 BEFORE - Marker position:', markerRef.current.getLatLng());
+        console.log('🎯 MOVING marker to:', { lat: finalLat, lng: finalLng });
+        
+        // تحريك العلامة - الأمر الحاسم!
+        markerRef.current.setLatLng([finalLat, finalLng]);
+        
+        // تحريك الدائرة أيضاً
+        if (circleRef.current) {
+          circleRef.current.setLatLng([finalLat, finalLng]);
+          console.log('⭕ Circle moved with marker');
+        }
+        
+        console.log('🎯 AFTER - Marker position:', markerRef.current.getLatLng());
+        console.log('✅ ✅ ✅ Marker MOVED successfully! Check the map!');
+        
+        // إضافة bounce animation
+        setTimeout(() => {
+          if (markerRef.current) {
+            const icon = markerRef.current.getElement();
+            if (icon) {
+              console.log('🎨 Adding bounce animation to marker');
+              icon.style.animation = 'none';
+              setTimeout(() => {
+                icon.style.animation = 'bounce 0.5s ease-in-out';
+              }, 10);
+            } else {
+              console.error('❌ Marker icon element not found!');
+            }
+          }
+        }, 100);
+        
+        // تحريك الخريطة للمركز على الموقع الجديد مع animation
+        console.log('🗺️ Flying map to:', { lat: finalLat, lng: finalLng });
+        map.flyTo([finalLat, finalLng], map.getZoom(), {
+          duration: 0.5,
+          easeLinearity: 0.25
+        });
+        
+        console.log('✅ ✅ ✅ EVERYTHING MOVED - CHECK THE MAP NOW!');
+      } else {
+        console.error('❌ Marker ref is null!');
+      }
+      
+      // خطوة 3: ArcGIS Reverse Geocoding
+      try {
+        const arcgisUrl = `https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode?location=${finalLng}%2C${finalLat}&outSR=4326&f=pjson`;
+        const response = await fetch(arcgisUrl);
+        const data = await response.json();
+        
+        const addr = data.address || {};
+        
+        // إضافة Popup للعلامة
+        if (markerRef.current) {
+          const popupContent = snappedBuilding 
+            ? `<div style="text-align: right; font-family: 'Tajawal', sans-serif; direction: rtl;">
+                 <strong style="color: #01411C;">🏢 ${snappedBuilding.name || 'مبنى'}</strong><br/>
+                 <span style="color: #666;">📍 ${addr.City || 'الرياض'} - ${addr.Neighborhood || snappedBuilding.district || ''}</span><br/>
+                 <span style="color: #999; font-size: 12px;">🎯 تم التثبيت على المبنى</span>
+               </div>`
+            : `<div style="text-align: right; font-family: 'Tajawal', sans-serif; direction: rtl;">
+                 <strong style="color: #01411C;">📍 ${addr.City || 'الرياض'}</strong><br/>
+                 <span style="color: #666;">${addr.Neighborhood || addr.District || 'موقع محدد'}</span><br/>
+                 <span style="color: #999; font-size: 12px;">🗺️ موقع عادي</span>
+               </div>`;
+          
+          markerRef.current.bindPopup(popupContent).openPopup();
+        }
+        
+        // خطوة 4: تعبئة الحقول
+        onLocationSelect({
+          city: addr.City || addr.Region || '',
+          district: addr.Neighborhood || addr.District || '',
+          street: addr.Address || addr.Street || '',
+          buildingNumber: addr.AddNum || snappedBuilding?.id || '',
+          postalCode: addr.Postal || addr.PostalCode || '',
+          additionalNumber: addr.Subregion || addr.MetroArea || '',
+          coordinates: { lat: finalLat, lng: finalLng },
+          buildingInfo: snappedBuilding
+        });
+        
+        console.log('📍 ArcGIS Response:', addr);
+        
+        // خطوة 5: تشغيل الذكاء المكاني
+        try {
+          console.log('🧠 Running Spatial Intelligence Analysis...');
+          const spatialAnalysis = await analyzeSpatialIntelligence({
+            lng: finalLng,
+            lat: finalLat,
+            buildingsData: buildingsData,
+            amenitiesData: amenitiesGeoJSON,
+            floodZonesData: floodZonesGeoJSON,
+            postalData: null, // يمكن إضافة بيانات الرموز البريدية لاحقاً
+            useDynamicSearch: true, // ✨ تفعيل البحث الديناميكي عن الخدمات الحقيقية
+          });
+          
+          setSpatialReport(spatialAnalysis);
+          setShowSpatialReport(true);
+          console.log('✅ Spatial Intelligence Report Generated:', spatialAnalysis);
+        } catch (err) {
+          console.error('❌ Error in Spatial Intelligence:', err);
+        }
+      } catch (err) {
+        console.error('خطأ في ArcGIS Geocoding:', err);
+        
+        // Fallback
+        onLocationSelect({
+          city: 'الرياض',
+          district: '',
+          street: '',
+          buildingNumber: '',
+          postalCode: '',
+          additionalNumber: '',
+          coordinates: { lat: finalLat, lng: finalLng },
+          buildingInfo: snappedBuilding
+        });
+        }
+      });
+      } catch (error) {
+        console.error('❌ Error initializing map:', error);
+      }
+    }, 100);
+    
+    return () => {
+      console.log('🧹 Cleaning up map...');
+      clearTimeout(timer);
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [cssLoaded]); // ✅ فقط cssLoaded - باقي المتغيرات يتم قراءتها من state مباشرة
+
+  return (
+    <div className="relative">
+      <style>{`
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-20px); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        .leaflet-marker-icon {
+          animation: pulse 2s infinite;
+        }
+      `}</style>
+      <div 
+        ref={mapContainerRef} 
+        className="w-full h-96 rounded-lg overflow-hidden border-2 border-red-300 bg-gray-100" 
+        style={{ zIndex: 1, minHeight: '384px', pointerEvents: 'auto', cursor: 'crosshair' }}
+        onClick={() => console.log('🖱️ DIV CLICKED! (This means clicks are reaching the div)')}
+      />
+      
+      {(!cssLoaded || isLoading) && (
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center rounded-lg" style={{ zIndex: 10, pointerEvents: 'none' }}>
+          <div className="bg-white rounded-lg p-4 shadow-xl">
+            <Loader2 className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-2" />
+            <p className="text-sm text-gray-700">{!cssLoaded ? 'جاري تحميل الخريطة...' : 'جاري تحميل البيانات...'}</p>
+          </div>
+        </div>
+      )}
+      
+      {/* أدوات التحكم والإرشادات */}
+      <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg p-3 space-y-2" style={{ zIndex: 1000, pointerEvents: 'auto' }}>
+        <button
+          onClick={() => setSnappingEnabled(!snappingEnabled)}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+            snappingEnabled 
+              ? 'bg-green-100 text-green-800 border-2 border-green-300' 
+              : 'bg-gray-100 text-gray-600 border-2 border-gray-300'
+          }`}
+        >
+          <Target className={`w-4 h-4 ${snappingEnabled ? 'animate-pulse' : ''}`} />
+          {snappingEnabled ? 'محاذاة المباني: مفعّل' : 'محاذاة المباني: معطّل'}
+        </button>
+        {spatialReport && (
+          <button
+            onClick={() => setShowSpatialReport(!showSpatialReport)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium bg-blue-100 text-blue-800 border-2 border-blue-300 transition-all hover:bg-blue-200 w-full"
+          >
+            <Sparkles className="w-4 h-4" />
+            {showSpatialReport ? 'إخفاء التقرير' : 'عرض التقرير المكاني'}
+          </button>
+        )}
+        <div className="text-xs text-gray-500 max-w-xs">
+          💡 انقر على الخريطة لتحديد الموقع وسيتم ملء بيانات العنوان الوطني تلقائياً
+        </div>
+      </div>
+      
+      {showSpatialReport && spatialReport && (
+        <SpatialIntelligenceReport 
+          report={spatialReport}
+          onClose={() => setShowSpatialReport(false)}
+        />
+      )}
+    </div>
+  );
+};
+
 export default function PropertyUploadComplete({ onBack, initialTab }: PropertyUploadCompleteProps) {
   console.log('🎯 PropertyUploadComplete تم التحميل مع initialTab:', initialTab);
   const { leftSidebarOpen } = useDashboardContext();
@@ -232,6 +633,8 @@ export default function PropertyUploadComplete({ onBack, initialTab }: PropertyU
   const [showPreview, setShowPreview] = useState(false);
   const [uploadedImages, setUploadedImages] = useState<string[]>([]); // ✅ مصفوفة الصور المرفوعة
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showMapPicker, setShowMapPicker] = useState(false);
+  const [snappingEnabled, setSnappingEnabled] = useState(true);
   
   // ✅ تحديث التبويب النشط عند تغيير initialTab
   useEffect(() => {
@@ -2163,33 +2566,40 @@ ${platformsInfo}
     }
   };
 
-  // دالة تحديد الموقع من Google Maps
-  const handleMapLocationSelect = async (lat: number, lng: number) => {
-    try {
-      // محاكاة Google Maps Geocoding API
-      const response = await fetch(`/api/geocoding/reverse?lat=${lat}&lng=${lng}`);
-      
-      // محاكاة البيانات المستخرجة
-      const mockLocationData = {
-        city: "الرياض",
-        district: "العليا", 
-        street: "شارع الملك فهد",
-        postalCode: "12345",
-        buildingNumber: "1234",
-        additionalNumber: "5678"
-      };
-      
-      setPropertyData(prev => ({
-        ...prev,
-        locationDetails: {
-          ...mockLocationData,
-          latitude: lat,
-          longitude: lng
-        }
-      }));
-    } catch (error) {
-      console.error('خطأ في استخراج بيانات الموقع:', error);
+  // دالة تحديد الموقع من الخريطة التفاعلية
+  const handleMapLocationSelect = (locationData: any) => {
+    console.log('📍 بيانات الموقع المستلمة:', locationData);
+    
+    // عرض رسالة نجاح مع تفاصيل
+    if (locationData.buildingInfo) {
+      console.log('✅ تم التثبيت على مبنى:', locationData.buildingInfo);
+      toast.success('✅ تم التثبيت على المبنى', {
+        description: `${locationData.buildingInfo.name || 'مبنى'} - ${locationData.buildingInfo.district || locationData.city || 'الرياض'}`,
+        duration: 3000
+      });
+    } else {
+      toast.success('📍 تم تحديد الموقع', {
+        description: `${locationData.city || 'الرياض'} - ${locationData.district || 'يمكنك النقر مرة أخرى لتغيير الموقع'}`,
+        duration: 3000
+      });
     }
+    
+    setPropertyData(prev => ({
+      ...prev,
+      locationDetails: {
+        city: locationData.city || '',
+        district: locationData.district || '',
+        street: locationData.street || '',
+        postalCode: locationData.postalCode || '',
+        buildingNumber: locationData.buildingNumber || '',
+        additionalNumber: locationData.additionalNumber || '',
+        latitude: locationData.coordinates?.lat || 0,
+        longitude: locationData.coordinates?.lng || 0
+      }
+    }));
+    // ✅ تم إزالة setShowMapPicker(false) - الخريطة تبقى مفتوحة للمستخدم
+    // يمكن للمستخدم النقر عدة مرات لتحريك العلامة
+    // ويُغلق الخريطة يدوياً بزر "إغلاق الخريطة"
   };
 
   // دالة جلب بيانات السوق
@@ -2725,33 +3135,59 @@ ${platformsInfo}
               <CardHeader>
                 <CardTitle className="text-[#01411C] flex items-center gap-2 text-right">
                   <MapIcon className="w-5 h-5" />
-                  تفاصيل الموقع (Google Maps)
+                  العنوان الوطني السعودي
                 </CardTitle>
                 <p className="text-sm text-gray-600 text-right">
-                  حدد الموقع من الخريطة للتعبئة التلقائية للبيانات
+                  حدد الموقع من الخريطة التفاعلية للتعبئة التلقائية باستخدام ArcGIS + Turf.js
                 </p>
               </CardHeader>
               <CardContent className="space-y-4">
-                {/* خيار استخدام محدد الموقع */}
-                <div className="flex items-center justify-between p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
-                  <div className="flex items-center gap-3">
-                    <Target className="w-6 h-6 text-blue-600" />
-                    <div>
-                      <h4 className="font-bold text-blue-800 text-right">تحديد الموقع من الخريطة</h4>
-                      <p className="text-sm text-blue-600 text-right">انقر لفتح خريطة Google وتحديد الموقع</p>
+                {/* زر فتح الخريطة */}
+                {!showMapPicker && (
+                  <div className="flex items-center justify-between p-4 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50">
+                    <div className="flex items-center gap-3">
+                      <Target className="w-6 h-6 text-blue-600" />
+                      <div>
+                        <h4 className="font-bold text-blue-800 text-right">تحديد الموقع من الخريطة</h4>
+                        <p className="text-sm text-blue-600 text-right">انقر لفتح الخريطة التفاعلية وتحديد الموقع بدقة</p>
+                      </div>
                     </div>
+                    <Button 
+                      className="bg-blue-600 text-white hover:bg-blue-700"
+                      onClick={() => setShowMapPicker(true)}
+                    >
+                      <MapPin className="w-4 h-4 mr-2" />
+                      فتح الخريطة
+                    </Button>
                   </div>
-                  <Button 
-                    className="bg-blue-600 text-white hover:bg-blue-700"
-                    onClick={() => {
-                      // محاكاة فتح Google Maps
-                      handleMapLocationSelect(24.7136, 46.6753); // الرياض كمثال
-                    }}
-                  >
-                    <MapPin className="w-4 h-4 mr-2" />
-                    اختر من الخريطة
-                  </Button>
-                </div>
+                )}
+
+                {/* الخريطة التفاعلية */}
+                {showMapPicker && (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-green-50 p-4 rounded-lg border-2 border-blue-200">
+                      <div className="flex-1">
+                        <h4 className="font-bold text-blue-800 flex items-center gap-2">
+                          <MapPin className="w-5 h-5 animate-bounce" />
+                          انقر على الخريطة لتحديد الموقع
+                        </h4>
+                        <p className="text-sm text-blue-600 mt-1">
+                          💡 يمكنك النقر عدة مرات لتغيير الموقع • استخدم زر "محاذاة المباني" للتثبيت التلقائي على أقرب مبنى
+                        </p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setShowMapPicker(false)}
+                        className="shrink-0"
+                      >
+                        <X className="w-4 h-4 ml-2" />
+                        إغلاق الخريطة
+                      </Button>
+                    </div>
+                    <MapLocationPicker onLocationSelect={handleMapLocationSelect} />
+                  </div>
+                )}
 
                 {/* البيانات المستخرجة تلقائياً */}
                 {propertyData.locationDetails.latitude !== 0 && (
@@ -2759,7 +3195,7 @@ ${platformsInfo}
                     <div className="col-span-2 mb-2">
                       <div className="flex items-center gap-2">
                         <Check className="w-4 h-4 text-green-600" />
-                        <span className="text-sm font-bold text-green-700">تم استخراج البيانات تلقائياً ��ن Google Maps</span>
+                        <span className="text-sm font-bold text-green-700">✅ تم استخراج بيانات العنوان الوطني تلقائياً (ArcGIS Geocoding)</span>
                       </div>
                     </div>
                     
